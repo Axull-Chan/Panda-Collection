@@ -12,6 +12,8 @@ import { AboutPage } from "./pages/AboutPage";
 import { CartPage } from "./pages/CartPage";
 import { AccountPage } from "./pages/AccountPage";
 import { CheckoutPage } from "./pages/CheckoutPage";
+import { CheckoutSuccessPage } from "./pages/CheckoutSuccessPage";
+import { CheckoutCancelledPage } from "./pages/CheckoutCancelledPage";
 import { OrdersPage } from "./pages/OrdersPage";
 import { WishlistPage } from "./pages/WishlistPage";
 import { SignInPage } from "./pages/auth/SignInPage";
@@ -131,6 +133,22 @@ function App() {
               element={
                 <RequireAuth>
                   <CheckoutPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/checkout/success"
+              element={
+                <RequireAuth>
+                  <CheckoutSuccessPage />
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/checkout/cancelled"
+              element={
+                <RequireAuth>
+                  <CheckoutCancelledPage />
                 </RequireAuth>
               }
             />

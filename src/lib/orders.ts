@@ -31,20 +31,35 @@ export interface OrderRecord {
   order_items: OrderItemRecord[];
 }
 
+const ORDER_SELECT =
+  "id,created_at,status,payment_status,shipping_status,subtotal,total," +
+  "order_items(id,product_name,variant_label,quantity,unit_price," +
+  "products(slug,product_images(url,is_primary)))";
+
 export async function fetchOrders(): Promise<OrderRecord[]> {
   const { data, error } = await supabase
     .from("orders")
-    .select(
-      "id,created_at,status,payment_status,shipping_status,subtotal,total," +
-        "order_items(id,product_name,variant_label,quantity,unit_price," +
-        "products(slug,product_images(url,is_primary)))"
-    )
+    .select(ORDER_SELECT)
     .order("created_at", { ascending: false });
   if (error) {
     console.warn("[orders] fetch failed:", error.message);
     return [];
   }
   return (data ?? []) as unknown as OrderRecord[];
+}
+
+/** Looks up the order created for a given Stripe Checkout Session. */
+export async function fetchOrderBySessionId(sessionId: string): Promise<OrderRecord | null> {
+  const { data, error } = await supabase
+    .from("orders")
+    .select(ORDER_SELECT)
+    .eq("stripe_session_id", sessionId)
+    .maybeSingle();
+  if (error) {
+    console.warn("[orders] session lookup failed:", error.message);
+    return null;
+  }
+  return (data as unknown as OrderRecord) ?? null;
 }
 
 export async function createOrder(

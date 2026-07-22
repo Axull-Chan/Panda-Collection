@@ -1,19 +1,18 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useProducts } from "../context/ProductsContext";
-import { createOrder, orderNumber } from "../lib/orders";
+import { supabase } from "../lib/supabase";
 import { AuthCheckbox, AuthError, AuthField, AuthSubmit } from "../components/auth/AuthField";
 import { Reveal } from "../components/Reveal";
 import { pageVariants } from "../lib/motionVariants";
 
 export function CheckoutPage() {
-  const { user, profile, updateProfile } = useAuth();
-  const { lines, subtotal, clearCart } = useCart();
+  const { profile, updateProfile } = useAuth();
+  const { lines, subtotal } = useCart();
   const { products, source } = useProducts();
-  const navigate = useNavigate();
 
   const [fullName, setFullName] = useState("");
   const [line1, setLine1] = useState("");
@@ -46,7 +45,7 @@ export function CheckoutPage() {
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (busy || !user) return;
+    if (busy) return;
     if (!line1.trim() || !city.trim() || !postal.trim() || !country.trim()) {
       setError("Please fill in your shipping address.");
       return;
@@ -66,16 +65,28 @@ export function CheckoutPage() {
       country: country.trim(),
     };
 
-    const result = await createOrder(user, lines, products, address);
-    if ("error" in result) {
+    if (saveAddress) await updateProfile({ address });
+
+    // The Edge Function re-validates prices and stock server-side, creates
+    // the order as a draft, and starts a Stripe Checkout Session. Nothing
+    // is charged and no order is marked paid until Stripe's own
+    // signature-verified webhook confirms payment.
+    const { data, error: fnError } = await supabase.functions.invoke("create-checkout-session", {
+      body: { lines, address },
+    });
+
+    if (fnError || !data?.url) {
       setBusy(false);
-      setError(result.error);
+      setError(
+        (data as { error?: string } | null)?.error ??
+          "Something went wrong starting checkout. Please try again."
+      );
       return;
     }
 
-    if (saveAddress) await updateProfile({ address });
-    clearCart();
-    navigate(`/account/orders?placed=${orderNumber(result.orderId)}`, { replace: true });
+    // Full navigation to Stripe's hosted page — the cart is preserved and
+    // only cleared once we land back on the success page.
+    window.location.href = data.url as string;
   };
 
   if (lines.length === 0) {
@@ -182,10 +193,12 @@ export function CheckoutPage() {
               onChange={setSaveAddress}
             />
             <AuthError message={error} />
-            <AuthSubmit busy={busy}>{busy ? "Placing order" : "Place Order"}</AuthSubmit>
+            <AuthSubmit busy={busy}>
+              {busy ? "Redirecting to Payment" : "Continue to Payment"}
+            </AuthSubmit>
             <p className="text-xs leading-relaxed text-muted">
-              Payment is collected on dispatch. Each piece is made to keep —
-              complimentary repairs for the life of the garment.
+              You'll complete payment securely via Stripe. Each piece is made
+              to keep — complimentary repairs for the life of the garment.
             </p>
           </form>
         </Reveal>

@@ -1,0 +1,13 @@
+# Only relevant if you deploy via the Supabase CLI (`supabase link` + `supabase functions deploy`).
+# If you deploy via the Dashboard's Edge Functions editor instead, set the
+# "Verify JWT" toggle for stripe-webhook to OFF there — see STRIPE_SETUP.md.
+project_id = "waihjvevdxeurnvkgvvj"
+
+[functions.create-checkout-session]
+verify_jwt = true
+
+[functions.stripe-webhook]
+# Stripe calls this endpoint directly and cannot supply a Supabase user JWT.
+# The request is instead authenticated by verifying the Stripe-Signature
+# header against STRIPE_WEBHOOK_SECRET inside the function itself.
+verify_jwt = false
