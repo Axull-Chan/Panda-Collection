@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X PATCH https://waihjvevdxeurnvkgvvj.supabase.co/rest/v1/product_variants?product_id=eq.5fe42d3b-c8bf-4e85-98f7-55cfd714d866 -H 'apikey: sb_publishable_wz03CcTK27sczlSO7NnKAw_w71teXDb' -H 'Authorization: Bearer sb_publishable_wz03CcTK27sczlSO7NnKAw_w71teXDb' -H 'Content-Type: application/json' -H 'Prefer: return=representation' -d '{\"stock\": 0}')",
+      "Bash(curl -s -X POST https://waihjvevdxeurnvkgvvj.supabase.co/rest/v1/orders -H 'apikey: sb_publishable_wz03CcTK27sczlSO7NnKAw_w71teXDb' -H 'Authorization: Bearer sb_publishable_wz03CcTK27sczlSO7NnKAw_w71teXDb' -H 'Content-Type: application/json' -d '{\"total\": 1, \"subtotal\": 1, \"shipping_address\": {}}')",
+      "Bash(npm run *)",
+      "Bash(npx tsc *)",
+      "Bash(supabase --version)",
+      "Bash(echo \"=== tsc exit: $? ===\")",
+      "Bash(echo \"=== build exit: $? ===\")",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}
