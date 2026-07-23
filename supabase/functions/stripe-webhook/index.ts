@@ -20,7 +20,11 @@ Deno.serve(async (req) => {
     return new Response("Server misconfigured", { status: 500 });
   }
 
-  const stripe = new Stripe(stripeSecretKey);
+  // stripe-node defaults to Node's http module, which doesn't exist in
+  // Deno — it must be told explicitly to use the Fetch API instead.
+  const stripe = new Stripe(stripeSecretKey, {
+    httpClient: Stripe.createFetchHttpClient(),
+  });
   const signature = req.headers.get("stripe-signature");
   const rawBody = await req.text(); // raw bytes required for signature check
 

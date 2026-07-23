@@ -14,7 +14,11 @@
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@17";
-import { corsHeaders } from "../_shared/cors.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
 
 interface CartLine {
   productId: string; // product slug
@@ -168,7 +172,11 @@ Deno.serve(async (req) => {
     );
     if (itemsError) throw itemsError;
 
-    const stripe = new Stripe(stripeSecretKey);
+    // stripe-node defaults to Node's http module, which doesn't exist in
+    // Deno — it must be told explicitly to use the Fetch API instead.
+    const stripe = new Stripe(stripeSecretKey, {
+      httpClient: Stripe.createFetchHttpClient(),
+    });
     const origin = req.headers.get("origin") ?? Deno.env.get("SITE_URL") ?? "";
 
     const session = await stripe.checkout.sessions.create({

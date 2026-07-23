@@ -13,7 +13,8 @@
       "Bash(grep -i \"\\\\.env$\\\\|secret\\\\|key\")",
       "Bash(git commit -m ' *)",
       "Bash(git branch *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(curl -s 'https://waihjvevdxeurnvkgvvj.supabase.co/rest/v1/products?slug=eq.ribbed-turtleneck&select=id,name,product_variants\\(id,size,stock\\)' -H 'apikey: sb_publishable_wz03CcTK27sczlSO7NnKAw_w71teXDb')"
     ]
   }
 }
