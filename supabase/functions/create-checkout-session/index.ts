@@ -37,6 +37,12 @@ interface Address {
 interface RequestBody {
   lines: CartLine[];
   address: Address;
+  /** window.location.origin from the browser — more reliable than sniffing
+   *  the Origin request header, which can be stripped/rewritten by proxies
+   *  in front of the function. Needed to build absolute URLs: Stripe
+   *  requires fully-qualified URLs for success_url/cancel_url and for any
+   *  product image it displays on its own hosted page. */
+  origin: string;
 }
 
 Deno.serve(async (req) => {
@@ -73,6 +79,18 @@ Deno.serve(async (req) => {
 
     const body = (await req.json()) as RequestBody;
     const { lines, address } = body;
+
+    // Prefer the origin the browser tells us directly; the Origin header
+    // can be absent or rewritten by proxies in front of this function.
+    const origin = body.origin || req.headers.get("origin") || Deno.env.get("SITE_URL") || "";
+    let originUrl: URL;
+    try {
+      originUrl = new URL(origin);
+    } catch {
+      return json({ error: "Could not determine which site to return you to." }, 400);
+    }
+    const toAbsoluteUrl = (maybeRelative: string) =>
+      maybeRelative.startsWith("http") ? maybeRelative : new URL(maybeRelative, originUrl).href;
 
     if (!Array.isArray(lines) || lines.length === 0) {
       return json({ error: "Your cart is empty." }, 400);
@@ -137,7 +155,7 @@ Deno.serve(async (req) => {
         variantLabel: `${variant.color} / ${variant.size}`,
         quantity: line.quantity,
         unitPrice: Number(product.sale_price ?? product.price),
-        image: primary?.url ?? null,
+        image: primary?.url ? toAbsoluteUrl(primary.url) : null,
       });
     }
 
@@ -177,7 +195,6 @@ Deno.serve(async (req) => {
     const stripe = new Stripe(stripeSecretKey, {
       httpClient: Stripe.createFetchHttpClient(),
     });
-    const origin = req.headers.get("origin") ?? Deno.env.get("SITE_URL") ?? "";
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -195,8 +212,8 @@ Deno.serve(async (req) => {
         },
       })),
       metadata: { order_id: order.id },
-      success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/checkout/cancelled?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: toAbsoluteUrl("/checkout/success?session_id={CHECKOUT_SESSION_ID}"),
+      cancel_url: toAbsoluteUrl("/checkout/cancelled?session_id={CHECKOUT_SESSION_ID}"),
     });
 
     await admin.from("orders").update({ stripe_session_id: session.id }).eq("id", order.id);

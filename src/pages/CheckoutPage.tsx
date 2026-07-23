@@ -72,7 +72,7 @@ export function CheckoutPage() {
     // is charged and no order is marked paid until Stripe's own
     // signature-verified webhook confirms payment.
     const { data, error: fnError } = await supabase.functions.invoke("create-checkout-session", {
-      body: { lines, address },
+      body: { lines, address, origin: window.location.origin },
     });
 
     if (fnError || !data?.url) {
