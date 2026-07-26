@@ -1,30 +1,36 @@
 // Supabase Edge Function: create-checkout-session
 //
 // Called by the authenticated storefront at checkout. Never trusts prices,
-// stock, or totals sent by the browser — everything is re-read from the
-// database here, server-side, before an order or a Stripe session is ever
-// created. This closes the "tampered client" gap a pure client-side
-// checkout would have.
+// stock, discounts, or totals sent by the browser — everything is re-read
+// from the database here, server-side, before an order or a Stripe session
+// is ever created. This closes the "tampered client" gap a pure
+// client-side checkout would have.
 //
 // Flow: verify the caller's session -> re-price the cart from Postgres ->
-// check real stock -> create the order + order_items (status: pending,
+// check real stock -> independently re-validate any coupon code against
+// the current subtotal -> create the order + order_items (status: pending,
 // payment_status: unpaid) -> create a Stripe Checkout Session mirroring
-// those items -> store the session id on the order -> return the Stripe
-// URL for the browser to redirect to.
+// those items (plus an ephemeral Stripe Coupon if a discount applies) ->
+// store the session id on the order -> return the Stripe URL for the
+// browser to redirect to.
 
 import { createClient } from "npm:@supabase/supabase-js@2";
 import Stripe from "npm:stripe@17";
+import { resolveCartLines, type CartLine } from "../_shared/pricing.ts";
+import { validateCoupon } from "../_shared/coupons.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface CartLine {
-  productId: string; // product slug
-  size: string;
-  quantity: number;
-}
+// A double-click or rapid refresh within this window reuses the
+// already-created Stripe session instead of spawning a new draft order.
+const CHECKOUT_DEDUPE_WINDOW_MS = 10_000;
+// Beyond that, cap sustained attempts — generous enough for "declined, fix
+// the card, try again," tight enough to stop a script.
+const CHECKOUT_MAX_ATTEMPTS = 5;
+const CHECKOUT_WINDOW_SECONDS = 300;
 
 interface Address {
   line1?: string;
@@ -37,12 +43,19 @@ interface Address {
 interface RequestBody {
   lines: CartLine[];
   address: Address;
+  /** Trimmed, case-insensitive — re-validated here regardless of what the
+   *  checkout page's own "Apply Coupon" preview already showed. */
+  couponCode?: string;
   /** window.location.origin from the browser — more reliable than sniffing
    *  the Origin request header, which can be stripped/rewritten by proxies
    *  in front of the function. Needed to build absolute URLs: Stripe
    *  requires fully-qualified URLs for success_url/cancel_url and for any
    *  product image it displays on its own hosted page. */
   origin: string;
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 Deno.serve(async (req) => {
@@ -58,6 +71,11 @@ Deno.serve(async (req) => {
     if (!stripeSecretKey) {
       throw new Error("STRIPE_SECRET_KEY is not configured on this function.");
     }
+    // stripe-node defaults to Node's http module, which doesn't exist in
+    // Deno — it must be told explicitly to use the Fetch API instead.
+    const stripe = new Stripe(stripeSecretKey, {
+      httpClient: Stripe.createFetchHttpClient(),
+    });
 
     const authHeader = req.headers.get("Authorization") ?? "";
 
@@ -77,8 +95,55 @@ Deno.serve(async (req) => {
     // exposed to the browser — this key only ever lives in this function.
     const admin = createClient(supabaseUrl, serviceRoleKey);
 
+    // A double-click, a rapid refresh, or two open tabs shouldn't spawn a
+    // second draft order — if this user already has a pending order with a
+    // live Stripe session from the last few seconds, hand back that same
+    // session instead of creating a new one.
+    const { data: recentOrder } = await admin
+      .from("orders")
+      .select("stripe_session_id, created_at")
+      .eq("user_id", user.id)
+      .eq("status", "pending")
+      .not("stripe_session_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (
+      recentOrder?.stripe_session_id &&
+      Date.now() - new Date(recentOrder.created_at).getTime() < CHECKOUT_DEDUPE_WINDOW_MS
+    ) {
+      try {
+        const existing = await stripe.checkout.sessions.retrieve(recentOrder.stripe_session_id);
+        if (existing.status === "open" && existing.url) {
+          return json({ url: existing.url });
+        }
+      } catch {
+        // Not retrievable for some reason — fall through and create a new one.
+      }
+    }
+
+    // Beyond accidental duplicates, cap how often one person can spin up new
+    // checkout sessions at all.
+    const { data: withinLimit, error: rateLimitError } = await admin.rpc("check_rate_limit", {
+      p_bucket: "checkout",
+      p_identifier: user.id,
+      p_max_count: CHECKOUT_MAX_ATTEMPTS,
+      p_window_seconds: CHECKOUT_WINDOW_SECONDS,
+    });
+    if (rateLimitError) throw rateLimitError;
+    if (withinLimit === false) {
+      return json(
+        {
+          error:
+            "You're checking out a little quickly — please wait a few minutes and try again.",
+        },
+        429
+      );
+    }
+
     const body = (await req.json()) as RequestBody;
-    const { lines, address } = body;
+    const { lines, address, couponCode } = body;
 
     // Prefer the origin the browser tells us directly; the Origin header
     // can be absent or rewritten by proxies in front of this function.
@@ -92,86 +157,58 @@ Deno.serve(async (req) => {
     const toAbsoluteUrl = (maybeRelative: string) =>
       maybeRelative.startsWith("http") ? maybeRelative : new URL(maybeRelative, originUrl).href;
 
-    if (!Array.isArray(lines) || lines.length === 0) {
-      return json({ error: "Your cart is empty." }, 400);
-    }
     if (!address?.line1 || !address?.city || !address?.postal_code || !address?.country) {
       return json({ error: "Please provide a complete shipping address." }, 400);
     }
 
     // Re-price everything from the database. Client-sent prices are ignored.
-    const slugs = [...new Set(lines.map((l) => l.productId))];
-    const { data: products, error: productsError } = await admin
-      .from("products")
-      .select(
-        "id,slug,name,price,sale_price,status," +
-          "product_images(url,is_primary,sort_order)," +
-          "product_variants(id,size,color,stock)"
-      )
-      .in("slug", slugs);
-    if (productsError) throw productsError;
+    const pricing = await resolveCartLines(admin, lines);
+    if (!pricing.ok) {
+      return json({ error: pricing.error }, pricing.status);
+    }
+    const { resolved, subtotal } = pricing;
 
-    type ResolvedLine = {
-      variantId: string;
-      productId: string;
-      productName: string;
-      variantLabel: string;
-      quantity: number;
-      unitPrice: number;
-      image: string | null;
-    };
-    const resolved: ResolvedLine[] = [];
+    // Independently re-validate the coupon against the real subtotal — the
+    // checkout page's "Apply Coupon" preview is a UX convenience, not the
+    // security boundary. A coupon could expire, hit its usage limit, or
+    // never have been valid at all between that preview and this request.
+    let discount = 0;
+    let couponFields: {
+      coupon_id: string;
+      coupon_code: string;
+      discount_type: string;
+      discount_value: number;
+    } | null = null;
 
-    for (const line of lines) {
-      const product = products?.find((p) => p.slug === line.productId);
-      if (!product || product.status !== "published") {
-        return json({ error: `A product in your cart is no longer available.` }, 409);
+    if (couponCode?.trim()) {
+      const result = await validateCoupon(admin, couponCode, subtotal);
+      if (!result.valid) {
+        return json({ error: result.message }, 400);
       }
-      const variant = product.product_variants.find((v: any) => v.size === line.size);
-      if (!variant) {
-        return json(
-          { error: `${product.name} is no longer available in size ${line.size}.` },
-          409
-        );
-      }
-      if (variant.stock < line.quantity) {
-        return json(
-          {
-            error:
-              variant.stock === 0
-                ? `${product.name} (Size ${line.size}) just sold out.`
-                : `Only ${variant.stock} left of ${product.name} (Size ${line.size}).`,
-          },
-          409
-        );
-      }
-      const primary =
-        product.product_images.find((i: any) => i.is_primary) ??
-        [...product.product_images].sort((a: any, b: any) => a.sort_order - b.sort_order)[0];
-      resolved.push({
-        variantId: variant.id,
-        productId: product.id,
-        productName: product.name,
-        variantLabel: `${variant.color} / ${variant.size}`,
-        quantity: line.quantity,
-        unitPrice: Number(product.sale_price ?? product.price),
-        image: primary?.url ? toAbsoluteUrl(primary.url) : null,
-      });
+      discount = result.discountAmount;
+      couponFields = {
+        coupon_id: result.coupon.id,
+        coupon_code: result.coupon.code,
+        discount_type: result.coupon.discount_type,
+        discount_value: result.coupon.discount_value,
+      };
     }
 
-    const subtotal = resolved.reduce((sum, r) => sum + r.unitPrice * r.quantity, 0);
-
     // Create the order as a draft: pending + unpaid. It only ever becomes
-    // "paid" via the signature-verified webhook below, never from the client.
+    // "paid" via the signature-verified webhook below, never from the
+    // client. subtotal/total are placeholders here — the
+    // recompute_order_total trigger overwrites both from the real
+    // order_items rows inserted just below, using this `discount`.
     const { data: order, error: orderError } = await admin
       .from("orders")
       .insert({
         user_id: user.id,
         email: user.email,
         subtotal,
-        discount: 0,
-        total: subtotal,
+        discount,
+        total: round2(subtotal - discount),
         shipping_address: address,
+        ...couponFields,
       })
       .select("id")
       .single();
@@ -190,11 +227,23 @@ Deno.serve(async (req) => {
     );
     if (itemsError) throw itemsError;
 
-    // stripe-node defaults to Node's http module, which doesn't exist in
-    // Deno — it must be told explicitly to use the Fetch API instead.
-    const stripe = new Stripe(stripeSecretKey, {
-      httpClient: Stripe.createFetchHttpClient(),
-    });
+    // A discount is represented to Stripe as an ephemeral, one-time coupon
+    // for the exact amount already computed above — not a percent_off
+    // mirroring our own coupon, which would let Stripe's own rounding (and
+    // ignorance of our max_discount cap) drift from what we actually
+    // decided to charge. This keeps our validation the single source of
+    // truth; Stripe just applies the number.
+    let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
+    if (discount > 0) {
+      const stripeCoupon = await stripe.coupons.create({
+        amount_off: Math.round(discount * 100),
+        currency: "usd",
+        duration: "once",
+        name: couponFields ? `Coupon ${couponFields.coupon_code}` : "Discount",
+        metadata: { order_id: order.id },
+      });
+      discounts = [{ coupon: stripeCoupon.id }];
+    }
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
@@ -207,10 +256,11 @@ Deno.serve(async (req) => {
           product_data: {
             name: r.productName,
             description: r.variantLabel,
-            images: r.image ? [r.image] : undefined,
+            images: r.image ? [toAbsoluteUrl(r.image)] : undefined,
           },
         },
       })),
+      discounts,
       metadata: { order_id: order.id },
       success_url: toAbsoluteUrl("/checkout/success?session_id={CHECKOUT_SESSION_ID}"),
       cancel_url: toAbsoluteUrl("/checkout/cancelled?session_id={CHECKOUT_SESSION_ID}"),

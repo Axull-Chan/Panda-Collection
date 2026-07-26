@@ -1,13 +1,22 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useProducts } from "../context/ProductsContext";
 import { supabase } from "../lib/supabase";
 import { AuthCheckbox, AuthError, AuthField, AuthSubmit } from "../components/auth/AuthField";
 import { Reveal } from "../components/Reveal";
+import { Image } from "../components/Image";
 import { pageVariants } from "../lib/motionVariants";
+
+interface AppliedCoupon {
+  code: string;
+  discountType: "percent" | "fixed";
+  discountValue: number;
+  discountAmount: number;
+}
 
 export function CheckoutPage() {
   const { profile, updateProfile } = useAuth();
@@ -23,6 +32,14 @@ export function CheckoutPage() {
   const [saveAddress, setSaveAddress] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<AppliedCoupon | null>(null);
+  const [couponBusy, setCouponBusy] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
+  const discount = appliedCoupon?.discountAmount ?? 0;
+  const total = Math.max(0, subtotal - discount);
 
   useEffect(() => {
     if (profile) {
@@ -42,6 +59,48 @@ export function CheckoutPage() {
     line,
     product: products.find((p) => p.id === line.productId),
   }));
+
+  const onApplyCoupon = async (e: FormEvent) => {
+    e.preventDefault();
+    const code = couponCode.trim();
+    if (couponBusy || !code) return;
+    setCouponBusy(true);
+    setCouponError(null);
+
+    // Server-side only: re-prices the cart and validates the coupon fresh
+    // against the database. This is a preview — create-checkout-session
+    // independently re-validates everything again at actual submission.
+    const { data, error: fnError } = await supabase.functions.invoke("validate-coupon", {
+      body: { code, lines },
+    });
+    setCouponBusy(false);
+
+    if (fnError || !data?.valid) {
+      let message = (data as { error?: string } | null)?.error;
+      if (!message && fnError instanceof FunctionsHttpError) {
+        try {
+          message = (await fnError.context.json())?.error;
+        } catch {
+          // Non-JSON body — fall through to the generic message below.
+        }
+      }
+      setCouponError(message ?? "Something went wrong applying your coupon. Please try again.");
+      return;
+    }
+
+    setAppliedCoupon({
+      code: data.code as string,
+      discountType: data.discountType as "percent" | "fixed",
+      discountValue: data.discountValue as number,
+      discountAmount: data.discountAmount as number,
+    });
+    setCouponCode("");
+  };
+
+  const onRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponError(null);
+  };
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -72,15 +131,29 @@ export function CheckoutPage() {
     // is charged and no order is marked paid until Stripe's own
     // signature-verified webhook confirms payment.
     const { data, error: fnError } = await supabase.functions.invoke("create-checkout-session", {
-      body: { lines, address, origin: window.location.origin },
+      body: {
+        lines,
+        address,
+        couponCode: appliedCoupon?.code,
+        origin: window.location.origin,
+      },
     });
 
     if (fnError || !data?.url) {
       setBusy(false);
-      setError(
-        (data as { error?: string } | null)?.error ??
-          "Something went wrong starting checkout. Please try again."
-      );
+      // supabase-js doesn't parse the function's JSON body on a non-2xx
+      // response — it only gives a generic FunctionsHttpError. The specific,
+      // actionable message (sign-in required, out of stock, bad address...)
+      // has to be read from the raw response it carries.
+      let message = (data as { error?: string } | null)?.error;
+      if (!message && fnError instanceof FunctionsHttpError) {
+        try {
+          message = (await fnError.context.json())?.error;
+        } catch {
+          // Non-JSON body — fall through to the generic message below.
+        }
+      }
+      setError(message ?? "Something went wrong starting checkout. Please try again.");
       return;
     }
 
@@ -213,13 +286,11 @@ export function CheckoutPage() {
                   key={`${line.productId}-${line.size}`}
                   className="flex items-center gap-5 border-b border-line py-5"
                 >
-                  <div className="h-20 w-[60px] shrink-0 overflow-hidden bg-panel">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    className="h-20 w-[60px] shrink-0"
+                  />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-serif text-lg leading-tight">{product.name}</p>
                     <p className="label mt-1 text-muted">
@@ -231,6 +302,60 @@ export function CheckoutPage() {
               ) : null
             )}
           </div>
+
+          {/* Coupon */}
+          <div className="border-b border-line py-6">
+            {appliedCoupon ? (
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="label">{appliedCoupon.code} applied</p>
+                  <p className="label mt-1.5 text-muted">
+                    {appliedCoupon.discountType === "percent"
+                      ? `${appliedCoupon.discountValue}% off`
+                      : `$${appliedCoupon.discountValue} off`}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={onRemoveCoupon}
+                  className="label link-underline shrink-0 text-muted"
+                >
+                  Remove
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={onApplyCoupon} className="flex items-end gap-3" noValidate>
+                <div className="flex-1">
+                  <label htmlFor="coupon-code" className="label text-muted">
+                    Coupon Code
+                  </label>
+                  <input
+                    id="coupon-code"
+                    type="text"
+                    autoComplete="off"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    disabled={couponBusy}
+                    aria-describedby={couponError ? "coupon-error" : undefined}
+                    className="h-10 w-full border-b border-line bg-transparent text-sm text-ink placeholder:text-muted focus:border-ink focus:outline-none disabled:opacity-50"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={couponBusy || !couponCode.trim()}
+                  className="label h-10 shrink-0 border border-ink px-5 transition-colors duration-300 hover:bg-ink hover:text-bg disabled:pointer-events-none disabled:opacity-40"
+                >
+                  {couponBusy ? "Applying…" : "Apply"}
+                </button>
+              </form>
+            )}
+            {couponError && (
+              <p id="coupon-error" role="alert" className="mt-4 text-xs leading-relaxed text-[#9c4a33]">
+                {couponError}
+              </p>
+            )}
+          </div>
+
           <div className="flex justify-between pt-6">
             <span className="label text-muted">Subtotal</span>
             <span className="label">${subtotal}</span>
@@ -239,9 +364,15 @@ export function CheckoutPage() {
             <span className="label text-muted">Shipping</span>
             <span className="label text-muted">Calculated on dispatch</span>
           </div>
+          {appliedCoupon && (
+            <div className="mt-3 flex justify-between">
+              <span className="label text-muted">Discount</span>
+              <span className="label">−${discount.toFixed(2)}</span>
+            </div>
+          )}
           <div className="mt-6 flex justify-between border-t border-line pt-6">
             <span className="label">Total</span>
-            <span className="label">${subtotal}</span>
+            <span className="label">${total.toFixed(2)}</span>
           </div>
         </Reveal>
       </div>

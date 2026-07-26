@@ -1088,3 +1088,217 @@ drop trigger if exists orders_apply_stock_decrement on public.orders;
 create trigger orders_apply_stock_decrement
   after update on public.orders
   for each row execute function public.apply_stock_decrement();
+
+-- ============================================================
+-- ANITA e-commerce schema — 008: payment timestamp
+-- ============================================================
+--
+-- Admins need to see *when* an order was actually paid, distinct from
+-- created_at (drafted) and updated_at (changes on every later edit,
+-- including unrelated shipping-status updates — not a reliable payment
+-- timestamp).
+--
+-- Set via trigger, not application code, so it's set exactly once no
+-- matter which code path flips payment_status to 'paid' (the webhook
+-- today; any future manual/admin path later) and is immune to Stripe's
+-- at-least-once webhook retries re-touching it.
+
+alter table public.orders
+  add column if not exists paid_at timestamptz;
+
+create or replace function public.set_paid_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.payment_status = 'paid'
+     and old.payment_status is distinct from 'paid'
+     and old.paid_at is null
+  then
+    new.paid_at := now();
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists orders_set_paid_at on public.orders;
+create trigger orders_set_paid_at
+  before update on public.orders
+  for each row execute function public.set_paid_at();
+
+-- ============================================================
+-- ANITA e-commerce schema — 009: newsletter signups
+-- ============================================================
+--
+-- `newsletter_signups` predates the versioned migration system (it was
+-- created directly in the dashboard during initial Supabase setup) and was
+-- never brought under RLS when the rest of the schema was hardened in
+-- migration 002. This creates it if it's somehow missing and locks it down
+-- to match every other table: public can subscribe, but only admins can
+-- read the list back — without this, subscriber emails would be readable
+-- by anyone via the anon key.
+
+create table if not exists public.newsletter_signups (
+  id uuid primary key default gen_random_uuid(),
+  email text not null unique,
+  created_at timestamptz not null default now()
+);
+
+alter table public.newsletter_signups enable row level security;
+
+drop policy if exists "Public subscribe" on public.newsletter_signups;
+create policy "Public subscribe" on public.newsletter_signups
+  for insert with check (true);
+
+drop policy if exists "Admin read newsletter signups" on public.newsletter_signups;
+create policy "Admin read newsletter signups" on public.newsletter_signups
+  for select using (public.is_admin());
+
+drop policy if exists "Admin manage newsletter signups" on public.newsletter_signups;
+create policy "Admin manage newsletter signups" on public.newsletter_signups
+  for all using (public.is_admin()) with check (public.is_admin());
+
+-- ============================================================
+-- ANITA e-commerce schema — 010: rate limiting
+-- ============================================================
+--
+-- A single fixed-window counter table backs every rate-limited endpoint
+-- (checkout session creation, newsletter signup, and any future one).
+-- Fixed windows (not a sliding log) are intentionally the simplest thing
+-- that works here: at boutique traffic volumes the boundary edge-case
+-- (a burst spanning two windows briefly allowing ~2x the limit) is not
+-- worth the added complexity of a sliding-window log.
+--
+-- Never queried directly by anon/authenticated — only through
+-- check_rate_limit(), a SECURITY DEFINER function callable from Edge
+-- Functions via RPC. RLS is enabled with no policies at all, so even a
+-- stolen anon/authenticated JWT gets zero access to it directly.
+
+create table if not exists public.rate_limit_counters (
+  bucket text not null,
+  identifier text not null,
+  window_start timestamptz not null,
+  count int not null default 1,
+  primary key (bucket, identifier, window_start)
+);
+
+alter table public.rate_limit_counters enable row level security;
+
+-- Atomically records one hit for (bucket, identifier) and reports whether
+-- the caller is still within p_max_count for the current p_window_seconds
+-- window. The insert-or-increment is a single statement, so two
+-- near-simultaneous calls for the same identifier can't both slip through
+-- via a check-then-write race.
+create or replace function public.check_rate_limit(
+  p_bucket text,
+  p_identifier text,
+  p_max_count int,
+  p_window_seconds int
+)
+returns boolean
+language plpgsql
+security definer set search_path = public
+as $$
+declare
+  v_window_start timestamptz;
+  v_count int;
+begin
+  v_window_start := to_timestamp(
+    floor(extract(epoch from now()) / p_window_seconds) * p_window_seconds
+  );
+
+  insert into public.rate_limit_counters (bucket, identifier, window_start, count)
+  values (p_bucket, p_identifier, v_window_start, 1)
+  on conflict (bucket, identifier, window_start)
+    do update set count = rate_limit_counters.count + 1
+  returning count into v_count;
+
+  -- Opportunistic cleanup — cheap thanks to the primary key's leading
+  -- columns, and keeps the table from growing unbounded without a cron job.
+  delete from public.rate_limit_counters
+  where window_start < now() - interval '1 day';
+
+  return v_count <= p_max_count;
+end;
+$$;
+
+-- ============================================================
+-- ANITA e-commerce schema — 011: coupon system
+-- ============================================================
+--
+-- The coupons/orders.coupon_id/orders.discount columns already exist
+-- (migration 001). This adds what's still missing for the full coupon
+-- feature:
+--
+-- 1. coupons.max_discount — an optional cap, mainly meant for percentage
+--    coupons ("20% off, up to $50").
+--
+-- 2. orders.coupon_code / discount_type / discount_value — a permanent
+--    snapshot of the coupon as it was AT PURCHASE TIME. orders.coupon_id
+--    alone isn't enough: it's `on delete set null`, and an admin editing
+--    or deleting a coupon later must never rewrite what a past order
+--    displays — the same reasoning order_items already snapshots
+--    product_name/variant_label instead of only pointing at product_id.
+--
+-- 3. orders.coupon_usage_counted + a trigger pair that increments
+--    coupons.used_count exactly once per order, the first time payment
+--    succeeds. Mirrors the existing stock_decremented pattern (migration
+--    007) for the identical reason: Stripe delivers webhooks
+--    at-least-once, so the same "payment succeeded" event can arrive
+--    twice — without an idempotency guard a retried webhook would count
+--    one purchase as two uses of the coupon.
+
+alter table public.coupons
+  add column if not exists max_discount numeric(10,2) check (max_discount is null or max_discount > 0);
+
+alter table public.orders
+  add column if not exists coupon_code text,
+  add column if not exists discount_type text check (discount_type is null or discount_type in ('percent', 'fixed')),
+  add column if not exists discount_value numeric(10,2),
+  add column if not exists coupon_usage_counted boolean not null default false;
+
+-- BEFORE trigger: flips `coupon_usage_counted` false -> true exactly once,
+-- the first time payment succeeds for an order that actually used a coupon.
+create or replace function public.mark_coupon_usage_counted()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.coupon_id is not null
+     and not old.coupon_usage_counted
+     and new.payment_status = 'paid'
+     and old.payment_status is distinct from 'paid'
+  then
+    new.coupon_usage_counted := true;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists orders_mark_coupon_usage_counted on public.orders;
+create trigger orders_mark_coupon_usage_counted
+  before update on public.orders
+  for each row execute function public.mark_coupon_usage_counted();
+
+-- AFTER trigger: reacts to that flag actually flipping this update, and
+-- increments the coupon's used_count exactly once per order, regardless
+-- of how many times payment_status is subsequently touched.
+create or replace function public.apply_coupon_usage()
+returns trigger
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  if new.coupon_usage_counted and not old.coupon_usage_counted then
+    update public.coupons
+      set used_count = used_count + 1
+      where id = new.coupon_id;
+  end if;
+  return null;
+end;
+$$;
+
+drop trigger if exists orders_apply_coupon_usage on public.orders;
+create trigger orders_apply_coupon_usage
+  after update on public.orders
+  for each row execute function public.apply_coupon_usage();

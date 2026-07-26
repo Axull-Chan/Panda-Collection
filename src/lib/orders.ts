@@ -27,12 +27,17 @@ export interface OrderRecord {
   payment_status: string;
   shipping_status: string;
   subtotal: number;
+  discount: number;
   total: number;
+  coupon_code: string | null;
+  discount_type: "percent" | "fixed" | null;
+  discount_value: number | null;
   order_items: OrderItemRecord[];
 }
 
 const ORDER_SELECT =
-  "id,created_at,status,payment_status,shipping_status,subtotal,total," +
+  "id,created_at,status,payment_status,shipping_status,subtotal,discount,total," +
+  "coupon_code,discount_type,discount_value," +
   "order_items(id,product_name,variant_label,quantity,unit_price," +
   "products(slug,product_images(url,is_primary)))";
 

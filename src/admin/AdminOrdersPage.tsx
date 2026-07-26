@@ -20,6 +20,7 @@ export function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -28,7 +29,8 @@ export function AdminOrdersPage() {
         setOrders(o);
         setCustomers(new Map(c.map((p) => [p.id, p])));
       })
-      .catch((e: Error) => setError(e.message));
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(load, [load]);
@@ -93,11 +95,21 @@ export function AdminOrdersPage() {
         </select>
       </Reveal>
 
-      {error && <p className="mt-4 text-sm text-[#9c4a33]">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-4 text-sm text-[#9c4a33]">
+          {error}
+        </p>
+      )}
 
       <Reveal delay={0.06} className="mt-8 space-y-6">
-        {filtered.length === 0 ? (
-          <p className="label py-14 text-center text-muted">No orders match</p>
+        {loading ? (
+          <p role="status" className="label py-14 text-center text-muted">
+            Loading orders…
+          </p>
+        ) : filtered.length === 0 ? (
+          <p role="status" className="label py-14 text-center text-muted">
+            No orders match
+          </p>
         ) : (
           filtered.map((o) => {
             const customer = o.user_id ? customers.get(o.user_id) : null;
@@ -127,6 +139,28 @@ export function AdminOrdersPage() {
 
                 {expanded && (
                   <div className="border-t border-line px-5 pb-6 sm:px-7">
+                    <div className="flex flex-wrap gap-x-10 gap-y-2 border-b border-line py-5">
+                      <div>
+                        <p className="label text-muted">Payment Date</p>
+                        <p className="label mt-1.5">
+                          {o.paid_at ? formatOrderDate(o.paid_at) : "Not yet paid"}
+                        </p>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="label text-muted">Stripe Session</p>
+                        <p className="label mt-1.5 truncate" title={o.stripe_session_id ?? undefined}>
+                          {o.stripe_session_id ?? "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="label text-muted">Coupon</p>
+                        <p className="label mt-1.5">
+                          {o.coupon_code
+                            ? `${o.coupon_code}${o.discount_type === "percent" ? ` (${o.discount_value}%)` : ""}`
+                            : "—"}
+                        </p>
+                      </div>
+                    </div>
                     <div className="divide-y divide-line">
                       {o.order_items.map((item) => (
                         <div key={item.id} className="flex items-center justify-between gap-4 py-3">
@@ -140,6 +174,22 @@ export function AdminOrdersPage() {
                         </div>
                       ))}
                     </div>
+                    {o.coupon_code && (
+                      <div className="border-t border-line py-5">
+                        <div className="flex justify-between">
+                          <span className="label text-muted">Original Total</span>
+                          <span className="label">${o.subtotal}</span>
+                        </div>
+                        <div className="mt-2 flex justify-between">
+                          <span className="label text-muted">Discount</span>
+                          <span className="label">−${o.discount}</span>
+                        </div>
+                        <div className="mt-2 flex justify-between">
+                          <span className="label">Final Paid</span>
+                          <span className="label">${o.total}</span>
+                        </div>
+                      </div>
+                    )}
 
                     <div className="mt-6 flex flex-wrap items-end gap-x-10 gap-y-4 border-t border-line pt-6">
                       <div>

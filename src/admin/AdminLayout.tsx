@@ -10,6 +10,7 @@ const ADMIN_LINKS = [
   { to: "/admin", labelText: "Dashboard", end: true },
   { to: "/admin/products", labelText: "Products", end: false },
   { to: "/admin/orders", labelText: "Orders", end: false },
+  { to: "/admin/coupons", labelText: "Coupons", end: false },
   { to: "/admin/inventory", labelText: "Inventory", end: false },
   { to: "/admin/customers", labelText: "Customers", end: false },
   { to: "/admin/analytics", labelText: "Analytics", end: false },

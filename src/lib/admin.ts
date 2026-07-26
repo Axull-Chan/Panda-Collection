@@ -56,8 +56,14 @@ export interface AdminOrder {
   payment_status: string;
   shipping_status: string;
   subtotal: number;
+  discount: number;
   total: number;
+  coupon_code: string | null;
+  discount_type: "percent" | "fixed" | null;
+  discount_value: number | null;
   created_at: string;
+  paid_at: string | null;
+  stripe_session_id: string | null;
   order_items: {
     id: string;
     product_name: string;
@@ -264,10 +270,14 @@ export async function updateVariantStock(variantId: string, stock: number) {
 // ---------- images ----------
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 export async function uploadProductImage(productId: string, file: File): Promise<AdminImage> {
   if (!IMAGE_TYPES.includes(file.type)) {
     throw new Error(`${file.name}: only JPEG, PNG, and WEBP are supported.`);
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new Error(`${file.name}: images must be 8MB or smaller.`);
   }
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
   const path = `${productId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
@@ -335,7 +345,9 @@ export async function fetchAdminOrders(): Promise<AdminOrder[]> {
   const { data, error } = await supabase
     .from("orders")
     .select(
-      "id,user_id,email,status,payment_status,shipping_status,subtotal,total,created_at," +
+      "id,user_id,email,status,payment_status,shipping_status,subtotal,discount,total," +
+        "coupon_code,discount_type,discount_value,created_at," +
+        "paid_at,stripe_session_id," +
         "order_items(id,product_name,variant_label,quantity,unit_price)"
     )
     .order("created_at", { ascending: false });

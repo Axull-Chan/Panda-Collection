@@ -11,6 +11,7 @@ import {
   type OrderRecord,
 } from "../lib/orders";
 import { Reveal } from "../components/Reveal";
+import { Image } from "../components/Image";
 import { pageVariants } from "../lib/motionVariants";
 
 function orderImage(item: OrderRecord["order_items"][number]) {
@@ -38,16 +39,11 @@ export function OrderBlock({ order }: { order: OrderRecord }) {
           const img = orderImage(item);
           const slug = item.products?.slug;
           const media = (
-            <div className="h-20 w-[60px] shrink-0 overflow-hidden bg-panel">
-              {img && (
-                <img
-                  src={img}
-                  alt={item.product_name}
-                  loading="lazy"
-                  className="h-full w-full object-cover"
-                />
-              )}
-            </div>
+            <Image
+              src={img}
+              alt={item.product_name}
+              className="h-20 w-[60px] shrink-0"
+            />
           );
           return (
             <div
@@ -75,6 +71,25 @@ export function OrderBlock({ order }: { order: OrderRecord }) {
           );
         })}
       </div>
+      {order.coupon_code && (
+        <div className="border-t border-line px-5 py-5 sm:px-8">
+          <div className="flex justify-between">
+            <span className="label text-muted">Original Total</span>
+            <span className="label">${order.subtotal}</span>
+          </div>
+          <div className="mt-2 flex justify-between">
+            <span className="label text-muted">
+              Coupon {order.coupon_code}
+              {order.discount_type === "percent" ? ` (${order.discount_value}%)` : ""}
+            </span>
+            <span className="label">−${order.discount}</span>
+          </div>
+          <div className="mt-3 flex justify-between border-t border-line pt-3">
+            <span className="label">Final Total Paid</span>
+            <span className="label">${order.total}</span>
+          </div>
+        </div>
+      )}
     </article>
   );
 }

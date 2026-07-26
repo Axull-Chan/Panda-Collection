@@ -46,6 +46,12 @@ const AdminInventoryPage = lazy(() =>
 const AdminOrdersPage = lazy(() =>
   import("./admin/AdminOrdersPage").then((m) => ({ default: m.AdminOrdersPage }))
 );
+const AdminCouponsPage = lazy(() =>
+  import("./admin/AdminCouponsPage").then((m) => ({ default: m.AdminCouponsPage }))
+);
+const CouponEditorPage = lazy(() =>
+  import("./admin/CouponEditorPage").then((m) => ({ default: m.CouponEditorPage }))
+);
 const AdminCustomersPage = lazy(() =>
   import("./admin/AdminCustomersPage").then((m) => ({ default: m.AdminCustomersPage }))
 );
@@ -78,6 +84,9 @@ function App() {
               <Route path="products/:id" element={<ProductEditorPage />} />
               <Route path="inventory" element={<AdminInventoryPage />} />
               <Route path="orders" element={<AdminOrdersPage />} />
+              <Route path="coupons" element={<AdminCouponsPage />} />
+              <Route path="coupons/new" element={<CouponEditorPage />} />
+              <Route path="coupons/:id" element={<CouponEditorPage />} />
               <Route path="customers" element={<AdminCustomersPage />} />
               <Route path="analytics" element={<AdminAnalyticsPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />

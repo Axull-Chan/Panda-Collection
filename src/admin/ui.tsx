@@ -35,6 +35,8 @@ const STATUS_STYLES: Record<string, string> = {
   published: "text-ink border-ink",
   draft: "text-muted border-line",
   archived: "text-muted border-line line-through",
+  active: "text-ink border-ink",
+  inactive: "text-muted border-line",
 };
 
 export function StatusBadge({ status }: { status: string }) {
