@@ -6,7 +6,9 @@ import { subscribeToNewsletter } from "../lib/newsletter";
 
 export function NewsletterSection() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error" | "rate_limited">(
+    "idle"
+  );
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -16,6 +18,8 @@ export function NewsletterSection() {
     if (result === "ok") {
       setStatus("done");
       setEmail("");
+    } else if (result === "rate_limited") {
+      setStatus("rate_limited");
     } else {
       setStatus("error");
     }
@@ -63,8 +67,13 @@ export function NewsletterSection() {
                 </button>
               </form>
               {status === "error" && (
-                <p className="mt-4 text-xs text-muted">
+                <p role="alert" className="mt-4 text-xs text-muted">
                   Something went wrong — please check the address and try again.
+                </p>
+              )}
+              {status === "rate_limited" && (
+                <p role="alert" className="mt-4 text-xs text-muted">
+                  Too many attempts — please try again in a little while.
                 </p>
               )}
             </>
