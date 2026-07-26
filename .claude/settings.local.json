@@ -53,7 +53,11 @@
       "Bash(gh auth *)",
       "mcp__e8ade623-169b-48a9-8a06-03ab19ab9921__list_teams",
       "Bash(grep -rEn \"sk_live|sk_test_[A-Za-z0-9]{20,}|whsec_[A-Za-z0-9]{20,}|service_role|SUPABASE_SERVICE_ROLE|eyJhbGciOiJIUzI1NiI\" --include=\"*.ts\" --include=\"*.tsx\" --include=\"*.json\" --include=\"*.sql\" --include=\"*.md\" .)",
-      "Bash(git reset *)"
+      "Bash(git reset *)",
+      "Bash(xargs du -ch)",
+      "Bash(git config *)",
+      "Bash(git remote *)",
+      "Bash(git push *)"
     ]
   }
 }
