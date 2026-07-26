@@ -1,12 +1,13 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ImageOff } from "lucide-react";
 import { useProducts } from "../context/ProductsContext";
 import { journalPosts } from "../data/journal";
 import { ProductCard } from "../components/ProductCard";
 import { NewsletterSection } from "../components/NewsletterSection";
 import { Reveal } from "../components/Reveal";
+import { Image } from "../components/Image";
 import { EASE, pageVariants } from "../lib/motionVariants";
 
 const heroImage = "/images/panda-blossom.jpg";
@@ -51,6 +52,7 @@ function SectionHeader({
 export function HomePage() {
   const { products } = useProducts();
   const featured = products.filter((p) => p.badge === "SIGNATURE").slice(0, 3);
+  const [heroFailed, setHeroFailed] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -64,12 +66,22 @@ export function HomePage() {
       {/* Hero — light ink illustration on a white canvas, so the artwork is
           never cropped and the type sits in ink rather than white */}
       <section ref={heroRef} className="relative h-svh overflow-hidden bg-white">
-        <motion.img
-          src={heroImage}
-          alt="Ink illustration of a panda sleeping on a blossoming plum branch"
-          style={{ y: imageY, scale: imageScale }}
-          className="absolute inset-x-0 top-0 h-[58%] w-full object-contain object-right-top px-6 pt-20 sm:h-[62%] md:px-12 lg:h-[66%] lg:pt-28"
-        />
+        {heroFailed ? (
+          <div className="absolute inset-x-0 top-0 flex h-[58%] items-center justify-center sm:h-[62%] lg:h-[66%]">
+            <ImageOff size={24} strokeWidth={1.25} className="text-muted/60" aria-hidden="true" />
+            <span className="sr-only">
+              Ink illustration of a panda sleeping on a blossoming plum branch
+            </span>
+          </div>
+        ) : (
+          <motion.img
+            src={heroImage}
+            alt="Ink illustration of a panda sleeping on a blossoming plum branch"
+            style={{ y: imageY, scale: imageScale }}
+            onError={() => setHeroFailed(true)}
+            className="absolute inset-x-0 top-0 h-[58%] w-full object-contain object-right-top px-6 pt-20 sm:h-[62%] md:px-12 lg:h-[66%] lg:pt-28"
+          />
+        )}
 
         <div className="relative mx-auto flex h-full max-w-[1400px] flex-col justify-end px-6 pb-14 text-ink sm:pb-20 md:px-12 lg:pb-28">
           <motion.p
@@ -154,27 +166,21 @@ export function HomePage() {
             </Link>
           </Reveal>
           <Reveal delay={0.1} className="lg:col-span-7 lg:col-start-6">
-            <div className="aspect-[4/5] overflow-hidden bg-panel">
-              <img
-                src="/images/houndstooth.jpg"
-                alt="Houndstooth tailoring from Edition No. 01, seated in the atelier"
-                loading="lazy"
-                className="h-full w-full object-cover"
-              />
-            </div>
+            <Image
+              src="/images/houndstooth.jpg"
+              alt="Houndstooth tailoring from Edition No. 01, seated in the atelier"
+              aspectRatio="4/5"
+            />
           </Reveal>
         </div>
 
         <div className="mt-16 grid grid-cols-1 items-center gap-x-8 gap-y-8 sm:mt-32 sm:gap-y-12 lg:grid-cols-12">
           <Reveal className="lg:col-span-6">
-            <div className="aspect-[5/4] overflow-hidden bg-panel">
-              <img
-                src="/images/flatlay-oxford.jpg"
-                alt="A full look laid flat — blazer, washed blue shirt, and tiered skirt"
-                loading="lazy"
-                className="h-full w-full object-cover"
-              />
-            </div>
+            <Image
+              src="/images/flatlay-oxford.jpg"
+              alt="A full look laid flat — blazer, washed blue shirt, and tiered skirt"
+              aspectRatio="5/4"
+            />
           </Reveal>
           <Reveal delay={0.1} className="lg:col-span-5 lg:col-start-8">
             <blockquote className="font-serif text-3xl italic leading-[1.15] md:text-4xl lg:text-5xl">
@@ -193,14 +199,12 @@ export function HomePage() {
           {galleryImages.map((image, i) => (
             <Reveal key={image.src} delay={(i % 3) * 0.08} className="mb-4 md:mb-6 lg:mb-8">
               <figure className="group">
-                <div className="overflow-hidden bg-panel">
-                  <img
-                    src={image.src}
-                    alt={image.caption}
-                    loading="lazy"
-                    className="w-full transition-all duration-700 ease-out group-hover:scale-[1.03] group-hover:opacity-90"
-                  />
-                </div>
+                <Image
+                  src={image.src}
+                  alt={image.caption}
+                  hoverZoom
+                  imgClassName="group-hover:opacity-90"
+                />
                 <figcaption className="label mt-2 text-muted sm:mt-3">{image.caption}</figcaption>
               </figure>
             </Reveal>
@@ -220,14 +224,7 @@ export function HomePage() {
           {journalPosts.map((post, i) => (
             <Reveal key={post.id} delay={i * 0.08}>
               <Link to="/journal" className="group block">
-                <div className="aspect-[4/5] overflow-hidden bg-panel">
-                  <img
-                    src={post.image}
-                    alt=""
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                  />
-                </div>
+                <Image src={post.image} alt="" aspectRatio="4/5" hoverZoom />
                 <p className="label mt-4 text-muted sm:mt-6">
                   {post.category} · {post.date}
                 </p>

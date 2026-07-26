@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Reveal } from "../components/Reveal";
 import { NewsletterSection } from "../components/NewsletterSection";
+import { Image } from "../components/Image";
 import { pageVariants } from "../lib/motionVariants";
 
 const PRINCIPLES = [
@@ -38,14 +39,12 @@ export function AboutPage() {
 
         <div className="mt-14 grid grid-cols-1 gap-x-8 gap-y-8 sm:mt-24 sm:gap-y-12 lg:grid-cols-12">
           <Reveal className="lg:col-span-7">
-            <div className="aspect-[4/3] overflow-hidden bg-panel">
-              <img
-                src="/images/wool-suit.jpg"
-                alt="The relaxed wool suit from Edition No. 01, photographed in the studio"
-                loading="lazy"
-                className="h-full w-full object-cover object-top"
-              />
-            </div>
+            <Image
+              src="/images/wool-suit.jpg"
+              alt="The relaxed wool suit from Edition No. 01, photographed in the studio"
+              aspectRatio="4/3"
+              objectPosition="top"
+            />
           </Reveal>
           <Reveal delay={0.1} className="lg:col-span-4 lg:col-start-9 lg:self-end">
             <p className="text-sm leading-relaxed text-muted">
@@ -87,14 +86,11 @@ export function AboutPage() {
             </Link>
           </Reveal>
           <Reveal delay={0.1} className="lg:col-span-6 lg:col-start-7">
-            <div className="aspect-[4/5] overflow-hidden bg-panel">
-              <img
-                src="/images/leather-corset.jpg"
-                alt="The leather corset dress pinned on the atelier dress form"
-                loading="lazy"
-                className="h-full w-full object-cover"
-              />
-            </div>
+            <Image
+              src="/images/leather-corset.jpg"
+              alt="The leather corset dress pinned on the atelier dress form"
+              aspectRatio="4/5"
+            />
           </Reveal>
         </div>
       </div>

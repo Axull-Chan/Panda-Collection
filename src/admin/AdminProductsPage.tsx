@@ -12,6 +12,7 @@ import {
   type Taxonomy,
 } from "../lib/admin";
 import { Reveal } from "../components/Reveal";
+import { Image } from "../components/Image";
 import { AdminButton, PageTitle, StatusBadge } from "./ui";
 
 type StatusFilter = "all" | "published" | "draft" | "archived";
@@ -33,10 +34,15 @@ export function AdminProductsPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [note, setNote] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    fetchAdminProducts().then(setProducts).catch((e: Error) => setError(e.message));
+    fetchAdminProducts()
+      .then(setProducts)
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
@@ -46,6 +52,12 @@ export function AdminProductsPage() {
       setCollections(collections);
     });
   }, [load]);
+
+  // A selection made under one filter view shouldn't silently carry over to
+  // a different one — the admin can no longer see what they'd be acting on.
+  useEffect(() => {
+    setSelected(new Set());
+  }, [statusFilter, categoryFilter, collectionFilter, stockFilter, featuredOnly, search]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -77,13 +89,15 @@ export function AdminProductsPage() {
 
   const allSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
 
-  const bulk = async (action: () => Promise<void>) => {
+  const bulk = async (action: () => Promise<void>, successMessage?: string) => {
     setBusy(true);
     setError(null);
+    setNote(null);
     try {
       await action();
       setSelected(new Set());
       load();
+      if (successMessage) setNote(successMessage);
     } catch (e) {
       setError((e as Error).message);
     }
@@ -212,7 +226,16 @@ export function AdminProductsPage() {
         </div>
       )}
 
-      {error && <p className="mt-4 text-sm text-[#9c4a33]">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-4 text-sm text-[#9c4a33]">
+          {error}
+        </p>
+      )}
+      {note && !error && (
+        <p role="status" className="label mt-4 text-muted">
+          {note}
+        </p>
+      )}
 
       {/* Product rows */}
       <Reveal delay={0.06} className="mt-8">
@@ -234,8 +257,14 @@ export function AdminProductsPage() {
           <span className="label w-[300px] text-muted">Actions</span>
         </div>
 
-        {filtered.length === 0 ? (
-          <p className="label py-14 text-center text-muted">No products match these filters</p>
+        {loading ? (
+          <p role="status" className="label py-14 text-center text-muted">
+            Loading products…
+          </p>
+        ) : filtered.length === 0 ? (
+          <p role="status" className="label py-14 text-center text-muted">
+            No products match these filters
+          </p>
         ) : (
           <div className="divide-y divide-line">
             {filtered.map((p) => {
@@ -254,12 +283,10 @@ export function AdminProductsPage() {
                     onChange={() => toggleSelect(p.id)}
                     className="h-3.5 w-3.5 accent-ink"
                   />
-                  <Link to={`/admin/products/${p.id}`} className="block h-16 w-12 shrink-0 overflow-hidden bg-panel">
-                    {primary && (
-                      <img src={primary.url} alt="" className="h-full w-full object-cover" />
-                    )}
+                  <Link to={`/admin/products/${p.id}`} className="block shrink-0">
+                    <Image src={primary?.url} alt="" className="h-16 w-12" />
                   </Link>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 basis-full lg:basis-auto lg:flex-1">
                     <Link
                       to={`/admin/products/${p.id}`}
                       className="block truncate font-serif text-lg transition-colors hover:text-muted"
@@ -337,7 +364,7 @@ export function AdminProductsPage() {
                       onClick={() =>
                         bulk(async () => {
                           await duplicateProduct(p);
-                        })
+                        }, `Duplicated "${p.name}" as a new draft.`)
                       }
                       className="label link-underline text-muted"
                     >

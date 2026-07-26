@@ -4,12 +4,14 @@ import { fetchAdminOrders, fetchAdminProducts, fetchAdminStats } from "../lib/ad
 import type { AdminOrder, AdminProduct, AdminStats } from "../lib/admin";
 import { formatOrderDate, formatStatus, orderNumber } from "../lib/orders";
 import { Reveal } from "../components/Reveal";
+import { Image } from "../components/Image";
 import { PageTitle, StatTile, StatusBadge } from "./ui";
 
 export function DashboardPage() {
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [recentProducts, setRecentProducts] = useState<AdminProduct[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -25,7 +27,8 @@ export function DashboardPage() {
             .slice(0, 5)
         );
       })
-      .catch((e: Error) => !cancelled && setError(e.message));
+      .catch((e: Error) => !cancelled && setError(e.message))
+      .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     };
@@ -35,7 +38,16 @@ export function DashboardPage() {
     <div>
       <PageTitle eyebrow="Atelier Admin" title="Dashboard" />
 
-      {error && <p className="mt-6 text-sm text-[#9c4a33]">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-6 text-sm text-[#9c4a33]">
+          {error}
+        </p>
+      )}
+      {loading && !error && (
+        <p role="status" className="label mt-6 text-muted">
+          Loading dashboard…
+        </p>
+      )}
 
       {stats && (
         <Reveal className="mt-10">
@@ -57,7 +69,7 @@ export function DashboardPage() {
             <StatTile
               label="Revenue — Paid"
               value={`$${stats.revenuePaid}`}
-              hint="Payments not yet connected"
+              hint="Confirmed Stripe payments"
             />
             <StatTile label="Open Order Value" value={`$${stats.totalOrderValue}`} />
           </div>
@@ -105,32 +117,29 @@ export function DashboardPage() {
               View all
             </Link>
           </div>
-          <div className="divide-y divide-line">
-            {recentProducts.map((p) => (
-              <Link
-                key={p.id}
-                to={`/admin/products/${p.id}`}
-                className="flex items-center justify-between gap-4 py-4 transition-colors hover:bg-panel/40"
-              >
-                <div className="flex min-w-0 items-center gap-4">
-                  <div className="h-14 w-10 shrink-0 overflow-hidden bg-panel">
-                    {p.product_images[0] && (
-                      <img
-                        src={
-                          p.product_images.find((i) => i.is_primary)?.url ??
-                          p.product_images[0].url
-                        }
-                        alt=""
-                        className="h-full w-full object-cover"
-                      />
-                    )}
+          {recentProducts.length === 0 ? (
+            <p className="label mt-6 text-muted">No products yet</p>
+          ) : (
+            <div className="divide-y divide-line">
+              {recentProducts.map((p) => (
+                <Link
+                  key={p.id}
+                  to={`/admin/products/${p.id}`}
+                  className="flex items-center justify-between gap-4 py-4 transition-colors hover:bg-panel/40"
+                >
+                  <div className="flex min-w-0 items-center gap-4">
+                    <Image
+                      src={p.product_images.find((i) => i.is_primary)?.url ?? p.product_images[0]?.url}
+                      alt=""
+                      className="h-14 w-[42px] shrink-0"
+                    />
+                    <p className="truncate font-serif text-lg">{p.name}</p>
                   </div>
-                  <p className="truncate font-serif text-lg">{p.name}</p>
-                </div>
-                <StatusBadge status={p.status} />
-              </Link>
-            ))}
-          </div>
+                  <StatusBadge status={p.status} />
+                </Link>
+              ))}
+            </div>
+          )}
         </Reveal>
       </div>
     </div>

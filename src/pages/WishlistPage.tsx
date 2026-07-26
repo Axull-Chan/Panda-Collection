@@ -6,6 +6,7 @@ import { useProducts } from "../context/ProductsContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
 import { Reveal } from "../components/Reveal";
+import { Image } from "../components/Image";
 import { pageVariants } from "../lib/motionVariants";
 import type { Product } from "../types";
 
@@ -27,15 +28,9 @@ function WishlistCard({ product, index }: { product: Product; index: number }) {
     <Reveal delay={(index % 3) * 0.08}>
       <div className="group">
         <Link to={`/product/${product.id}`} className="block">
-          <div className="relative aspect-[3/4] overflow-hidden bg-panel">
-            <img
-              src={product.image}
-              alt={product.name}
-              loading="lazy"
-              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-            />
+          <Image src={product.image} alt={product.name} aspectRatio="3/4" hoverZoom>
             <div className="pointer-events-none absolute inset-0 bg-ink/0 transition-colors duration-500 group-hover:bg-ink/10" />
-          </div>
+          </Image>
         </Link>
         <div className="mt-3 sm:mt-5">
           <Link to={`/product/${product.id}`} className="block">

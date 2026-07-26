@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "../context/CartContext";
 import { useProducts } from "../context/ProductsContext";
 import { useAuth } from "../context/AuthContext";
+import { Image } from "../components/Image";
 import { EASE, pageVariants } from "../lib/motionVariants";
 
 export function CartPage() {
@@ -58,14 +59,11 @@ export function CartPage() {
                   >
                     <div className="flex flex-col gap-3 py-6 sm:flex-row sm:items-center sm:gap-6 sm:py-8 md:gap-8">
                       <div className="flex gap-4 sm:contents">
-                        <Link
-                          to={`/product/${product.id}`}
-                          className="h-24 w-[72px] shrink-0 overflow-hidden bg-panel sm:h-32 sm:w-24"
-                        >
-                          <img
+                        <Link to={`/product/${product.id}`} className="block shrink-0">
+                          <Image
                             src={product.image}
                             alt={product.name}
-                            className="h-full w-full object-cover"
+                            className="h-24 w-[72px] sm:h-32 sm:w-24"
                           />
                         </Link>
 

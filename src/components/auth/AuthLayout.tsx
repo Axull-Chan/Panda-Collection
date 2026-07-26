@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
+import { ImageOff } from "lucide-react";
 import { EASE, pageVariants } from "../../lib/motionVariants";
 
 interface AuthLayoutProps {
@@ -16,6 +17,8 @@ interface AuthLayoutProps {
  * centered on the page.
  */
 export function AuthLayout({ eyebrow, title, intro, image, children }: AuthLayoutProps) {
+  const [imageFailed, setImageFailed] = useState(false);
+
   return (
     <motion.div
       initial="initial"
@@ -26,16 +29,26 @@ export function AuthLayout({ eyebrow, title, intro, image, children }: AuthLayou
     >
       {image && (
         <div className="relative hidden overflow-hidden bg-panel lg:block">
-          <motion.img
-            src={image.src}
-            alt={image.alt}
-            initial={{ opacity: 0, scale: 1.04 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, ease: EASE }}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <p className="label absolute bottom-8 left-8 z-10 text-white/90">{image.caption}</p>
-          <div className="absolute inset-0 bg-ink/10" />
+          {imageFailed ? (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <ImageOff size={20} strokeWidth={1.25} className="text-muted/60" aria-hidden="true" />
+              <span className="sr-only">{image.alt}</span>
+            </div>
+          ) : (
+            <>
+              <motion.img
+                src={image.src}
+                alt={image.alt}
+                initial={{ opacity: 0, scale: 1.04 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 1, ease: EASE }}
+                onError={() => setImageFailed(true)}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <p className="label absolute bottom-8 left-8 z-10 text-white/90">{image.caption}</p>
+              <div className="absolute inset-0 bg-ink/10" />
+            </>
+          )}
         </div>
       )}
 

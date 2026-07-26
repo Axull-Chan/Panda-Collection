@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { journalPosts } from "../data/journal";
 import { Reveal } from "../components/Reveal";
 import { NewsletterSection } from "../components/NewsletterSection";
+import { Image } from "../components/Image";
 import { pageVariants } from "../lib/motionVariants";
 
 export function JournalPage() {
@@ -28,14 +29,7 @@ export function JournalPage() {
                 <div
                   className={`lg:col-span-6 ${i % 2 === 1 ? "lg:order-2 lg:col-start-7" : ""}`}
                 >
-                  <div className="aspect-[4/3] overflow-hidden bg-panel">
-                    <img
-                      src={post.image}
-                      alt=""
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                    />
-                  </div>
+                  <Image src={post.image} alt="" aspectRatio="4/3" hoverZoom />
                 </div>
                 <div
                   className={`lg:col-span-5 ${i % 2 === 1 ? "lg:order-1" : "lg:col-start-8"}`}

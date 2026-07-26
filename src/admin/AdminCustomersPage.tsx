@@ -8,6 +8,7 @@ export function AdminCustomersPage() {
   const [customers, setCustomers] = useState<CustomerProfile[]>([]);
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -16,7 +17,8 @@ export function AdminCustomersPage() {
         setCustomers(c);
         setOrders(o);
       })
-      .catch((e: Error) => setError(e.message));
+      .catch((e: Error) => setError(e.message))
+      .finally(() => setLoading(false));
   }, []);
 
   const stats = useMemo(() => {
@@ -59,7 +61,11 @@ export function AdminCustomersPage() {
         />
       </Reveal>
 
-      {error && <p className="mt-4 text-sm text-[#9c4a33]">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-4 text-sm text-[#9c4a33]">
+          {error}
+        </p>
+      )}
 
       <Reveal delay={0.06} className="mt-8">
         <div className="hidden items-center gap-4 border-b border-line pb-3 sm:flex">
@@ -69,6 +75,15 @@ export function AdminCustomersPage() {
           <span className="label w-20 text-muted">Orders</span>
           <span className="label w-24 text-muted">Spend</span>
         </div>
+        {loading ? (
+          <p role="status" className="label py-14 text-center text-muted">
+            Loading customers…
+          </p>
+        ) : filtered.length === 0 ? (
+          <p role="status" className="label py-14 text-center text-muted">
+            No customers match
+          </p>
+        ) : (
         <div className="divide-y divide-line">
           {filtered.map((c) => {
             const s = stats.get(c.id);
@@ -88,6 +103,7 @@ export function AdminCustomersPage() {
             );
           })}
         </div>
+        )}
       </Reveal>
     </div>
   );
