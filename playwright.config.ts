@@ -2,11 +2,17 @@ import { defineConfig, devices } from "@playwright/test";
 import "./tests/fixtures/env";
 
 /**
- * Runs against the local Vite dev server. CI (when added) should set
- * CI=true, which disables retries-as-a-crutch and reuses no existing
+ * Runs against the local Vite dev server by default. CI (when added) should
+ * set CI=true, which disables retries-as-a-crutch and reuses no existing
  * server, matching a clean-checkout run.
+ *
+ * Set PLAYWRIGHT_BASE_URL to point the whole suite at a deployed site
+ * instead (e.g. the Vercel production URL) — this skips the local
+ * webServer entirely so it never starts a competing dev server.
  */
 const isCI = !!process.env.CI;
+const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173";
+const isRemote = baseURL !== "http://localhost:5173";
 
 export default defineConfig({
   testDir: "./tests",
@@ -20,7 +26,7 @@ export default defineConfig({
   globalSetup: "./tests/fixtures/global-setup.ts",
 
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL,
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
@@ -33,11 +39,13 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: "npm run dev",
-    url: "http://localhost:5173",
-    reuseExistingServer: !isCI,
-    timeout: 60_000,
-    stdout: "pipe",
-  },
+  webServer: isRemote
+    ? undefined
+    : {
+        command: "npm run dev",
+        url: "http://localhost:5173",
+        reuseExistingServer: !isCI,
+        timeout: 60_000,
+        stdout: "pipe",
+      },
 });

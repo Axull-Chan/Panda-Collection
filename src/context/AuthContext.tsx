@@ -70,7 +70,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const sameTab = sessionStorage.getItem(TAB_KEY) === "1";
     const init = async () => {
       if (ephemeral && !sameTab) {
-        await supabase.auth.signOut();
+        // scope: "local" — this only ends the not-remembered session as seen
+        // from this new tab. Global scope would also kill the original tab's
+        // still-active session, which the user never asked to end.
+        await supabase.auth.signOut({ scope: "local" });
         localStorage.removeItem(EPHEMERAL_KEY);
       }
       const { data } = await supabase.auth.getSession();
@@ -158,7 +161,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+    // scope: "local" — signing out on this device must not silently end the
+    // user's sessions on their other devices/tabs too (the default "global"
+    // scope revokes every active session for the account).
+    await supabase.auth.signOut({ scope: "local" });
     localStorage.removeItem(EPHEMERAL_KEY);
   }, []);
 
