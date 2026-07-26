@@ -23,3 +23,15 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.test
+.env*.local
+!.env.test.example
+
+# Vercel
+.vercel
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+tests/fixtures/.auth/

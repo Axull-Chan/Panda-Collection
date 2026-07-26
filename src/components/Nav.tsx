@@ -50,8 +50,11 @@ function AccountMenu() {
 
   const onSignOut = async () => {
     setOpen(false);
-    await signOut();
+    // Navigate before the auth state flips — see AccountPage's onSignOut
+    // for why (RequireAuth can otherwise win a race to /account/sign-in
+    // when signing out from a guarded route).
     navigate("/");
+    await signOut();
   };
 
   return (

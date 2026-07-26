@@ -3,6 +3,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -30,8 +31,14 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [ids, setIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
+  // Once a toggle()/remove() has landed an optimistic update, this
+  // baseline fetch is no longer the newest thing that's happened to `ids` —
+  // it was issued before that write, so its response can arrive late and
+  // otherwise overwrite the optimistic state with pre-write data.
+  const mutatedRef = useRef(false);
 
   useEffect(() => {
+    mutatedRef.current = false;
     if (!user) {
       setIds(new Set());
       return;
@@ -45,7 +52,9 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
         ({ data, error }) => {
           if (cancelled) return;
           if (error) console.warn("[wishlist] fetch failed:", error.message);
-          setIds(new Set((data ?? []).map((r) => r.product_id as string)));
+          if (!mutatedRef.current) {
+            setIds(new Set((data ?? []).map((r) => r.product_id as string)));
+          }
           setLoading(false);
         },
         (err: Error) => {
@@ -57,7 +66,13 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+    // Supabase's onAuthStateChange hands back a fresh `user` object on
+    // events that don't change who's signed in (e.g. TOKEN_REFRESHED) — keying
+    // off the object would re-run this fetch and clobber an in-flight
+    // optimistic toggle() update with stale pre-write data. user.id is
+    // stable across those events, so it's the correct dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const has = useCallback(
     (product: Product) => (product.dbId ? ids.has(product.dbId) : false),
@@ -67,6 +82,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
   const remove = useCallback(
     async (dbId: string) => {
       if (!user) return "Not signed in.";
+      mutatedRef.current = true;
       setIds((prev) => {
         const next = new Set(prev);
         next.delete(dbId);
@@ -93,6 +109,7 @@ export function WishlistProvider({ children }: { children: ReactNode }) {
       if (ids.has(product.dbId)) return remove(product.dbId);
 
       const dbId = product.dbId;
+      mutatedRef.current = true;
       setIds((prev) => new Set(prev).add(dbId));
       const { error } = await supabase
         .from("wishlist_items")

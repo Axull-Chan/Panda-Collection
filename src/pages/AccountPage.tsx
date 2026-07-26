@@ -13,6 +13,7 @@ import {
   type OrderRecord,
 } from "../lib/orders";
 import { Reveal } from "../components/Reveal";
+import { Image } from "../components/Image";
 import { AuthError, AuthField, AuthSubmit } from "../components/auth/AuthField";
 import { pageVariants } from "../lib/motionVariants";
 
@@ -115,8 +116,11 @@ export function AccountPage() {
   };
 
   const onSignOut = async () => {
-    await signOut();
+    // Navigate off this guarded route before the auth state actually flips:
+    // otherwise RequireAuth reactively redirects to /account/sign-in the
+    // instant `user` becomes null, racing this call and usually winning.
     navigate("/");
+    await signOut();
   };
 
   return (
@@ -183,14 +187,7 @@ export function AccountPage() {
               <div className="grid grid-cols-4 gap-3 sm:gap-4">
                 {savedProducts.slice(0, 4).map((p) => (
                   <Link key={p.id} to={`/product/${p.id}`} className="group block">
-                    <div className="aspect-[3/4] overflow-hidden bg-panel">
-                      <img
-                        src={p.image}
-                        alt={p.name}
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
-                      />
-                    </div>
+                    <Image src={p.image} alt={p.name} aspectRatio="3/4" hoverZoom />
                   </Link>
                 ))}
               </div>

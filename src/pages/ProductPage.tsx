@@ -8,6 +8,7 @@ import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
 import { fetchProductBySlug } from "../lib/catalog";
 import { EASE, pageVariants } from "../lib/motionVariants";
+import { Image } from "../components/Image";
 import type { Product } from "../types";
 
 export function ProductPage() {
@@ -50,6 +51,7 @@ export function ProductPage() {
 
   const [selectedSize, setSelectedSize] = useState("");
   const [added, setAdded] = useState(false);
+  const [wishlistError, setWishlistError] = useState<string | null>(null);
 
   useEffect(() => {
     if (product && !selectedSize) {
@@ -126,9 +128,7 @@ export function ProductPage() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, ease: EASE }}
         >
-          <div className="aspect-[3/4] overflow-hidden bg-panel">
-            <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
-          </div>
+          <Image src={product.image} alt={product.name} aspectRatio="3/4" priority />
         </motion.div>
 
         <motion.div
@@ -213,9 +213,18 @@ export function ProductPage() {
                 navigate("/account/sign-in", { state: { from: location.pathname } });
                 return;
               }
-              void toggle(product);
+              // product.dbId is unset while the bundled fallback catalog is
+              // still showing (before the live Supabase fetch resolves) —
+              // toggle() needs the real product UUID for the FK insert, so
+              // a click in that window silently no-ops otherwise.
+              if (!product.dbId) return;
+              setWishlistError(null);
+              void toggle(product).then((err) => {
+                if (err) setWishlistError(err);
+              });
             }}
-            className="label mt-4 flex h-12 w-full items-center justify-center gap-2.5 border border-line transition-colors duration-300 hover:border-ink"
+            disabled={!product.dbId}
+            className="label mt-4 flex h-12 w-full items-center justify-center gap-2.5 border border-line transition-colors duration-300 hover:border-ink disabled:pointer-events-none disabled:opacity-40"
           >
             <Heart
               size={14}
@@ -224,6 +233,9 @@ export function ProductPage() {
             />
             {has(product) ? "Saved to Wishlist" : "Save to Wishlist"}
           </button>
+          {wishlistError && (
+            <p className="mt-3 text-xs leading-relaxed text-[#9c4a33]">{wishlistError}</p>
+          )}
 
           <p className="mt-8 max-w-[400px] text-xs leading-relaxed text-muted">
             Each piece is made to keep. Complimentary repairs for the life of the

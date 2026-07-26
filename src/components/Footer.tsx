@@ -15,7 +15,9 @@ const SOCIALS = ["Instagram", "Pinterest", "Are.na"];
 
 export function Footer() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error" | "rate_limited">(
+    "idle"
+  );
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -25,6 +27,8 @@ export function Footer() {
     if (result === "ok") {
       setStatus("done");
       setEmail("");
+    } else if (result === "rate_limited") {
+      setStatus("rate_limited");
     } else {
       setStatus("error");
     }
@@ -110,6 +114,11 @@ export function Footer() {
                 {status === "error" && (
                   <p className="mt-3 text-xs text-muted">
                     Something went wrong — please try again.
+                  </p>
+                )}
+                {status === "rate_limited" && (
+                  <p className="mt-3 text-xs text-muted">
+                    Too many attempts — please try again in a little while.
                   </p>
                 )}
               </>

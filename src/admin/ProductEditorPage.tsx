@@ -19,6 +19,7 @@ import {
 } from "../lib/admin";
 import { AuthField } from "../components/auth/AuthField";
 import { Reveal } from "../components/Reveal";
+import { Image } from "../components/Image";
 import { AdminButton, PageTitle, StatusBadge } from "./ui";
 
 const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL"];
@@ -103,20 +104,25 @@ function ImageManager({
       />
 
       {uploading.length > 0 && (
-        <p className="label mt-4 text-muted">Uploading {uploading.join(", ")}…</p>
+        <p role="status" className="label mt-4 text-muted">
+          Uploading {uploading.join(", ")}…
+        </p>
       )}
-      {error && <p className="mt-4 text-xs text-[#9c4a33]">{error}</p>}
+      {error && (
+        <p role="alert" className="mt-4 text-xs text-[#9c4a33]">
+          {error}
+        </p>
+      )}
 
       {sorted.length > 0 && (
         <div className="mt-6 grid grid-cols-3 gap-4 sm:grid-cols-4">
           {sorted.map((img, i) => (
             <figure key={img.id} className="group">
-              <div className="relative aspect-[3/4] overflow-hidden bg-panel">
-                <img src={img.url} alt={img.alt ?? ""} className="h-full w-full object-cover" />
+              <Image src={img.url} alt={img.alt ?? ""} aspectRatio="3/4">
                 {img.is_primary && (
                   <span className="label absolute left-2 top-2 bg-bg px-2 py-1">Primary</span>
                 )}
-              </div>
+              </Image>
               <div className="mt-2 flex items-center justify-between gap-1">
                 <div className="flex items-center gap-1">
                   <button
@@ -214,6 +220,11 @@ export function ProductEditorPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [savedNote, setSavedNote] = useState(false);
+  // Guards the save buttons against firing while an existing product's
+  // data is still being fetched — otherwise a click that lands in that
+  // window sees the pre-load empty name/price and incorrectly rejects a
+  // product that genuinely has both, just not painted into state yet.
+  const [loadingProduct, setLoadingProduct] = useState(!isNew);
 
   const loadProduct = useCallback(async (pid: string) => {
     const p = await fetchAdminProduct(pid);
@@ -243,7 +254,11 @@ export function ProductEditorPage() {
       setCategories(categories);
       setCollections(collections);
     });
-    if (id) void loadProduct(id).catch((e: Error) => setError(e.message));
+    if (id) {
+      void loadProduct(id)
+        .catch((e: Error) => setError(e.message))
+        .finally(() => setLoadingProduct(false));
+    }
   }, [id, loadProduct]);
 
   const refreshImages = useCallback(() => {
@@ -254,7 +269,7 @@ export function ProductEditorPage() {
 
   const onSave = async (e: FormEvent, overrideStatus?: ProductStatus) => {
     e.preventDefault();
-    if (busy) return;
+    if (busy || loadingProduct) return;
     if (!name.trim() || !price.trim()) {
       setError("Name and price are required.");
       return;
@@ -338,7 +353,11 @@ export function ProductEditorPage() {
         />
       </div>
 
-      <form onSubmit={(e) => onSave(e)} className="mt-10 grid grid-cols-1 gap-x-12 gap-y-12 xl:grid-cols-2">
+      <form
+        onSubmit={(e) => onSave(e)}
+        noValidate
+        className="mt-10 grid grid-cols-1 gap-x-12 gap-y-12 xl:grid-cols-2"
+      >
         {/* Left column: details */}
         <Reveal className="space-y-8">
           <p className="label border-b border-line pb-4">Details</p>
@@ -580,28 +599,36 @@ export function ProductEditorPage() {
 
         {/* Footer actions */}
         <div className="xl:col-span-2">
-          {error && <p className="mb-4 text-sm text-[#9c4a33]">{error}</p>}
-          {savedNote && <p className="label mb-4 text-muted">Saved.</p>}
+          {error && (
+            <p role="alert" className="mb-4 text-sm text-[#9c4a33]">
+              {error}
+            </p>
+          )}
+          {savedNote && (
+            <p role="status" className="label mb-4 text-muted">
+              Saved.
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-3 border-t border-line pt-8">
-            <AdminButton solid type="submit" disabled={busy}>
+            <AdminButton solid type="submit" disabled={busy || loadingProduct}>
               {busy ? "Saving…" : status === "published" ? "Save Changes" : "Save"}
             </AdminButton>
             {status !== "published" && (
-              <AdminButton disabled={busy} onClick={() => onSave(new Event("submit") as unknown as FormEvent, "published")}>
+              <AdminButton disabled={busy || loadingProduct} onClick={() => onSave(new Event("submit") as unknown as FormEvent, "published")}>
                 Save & Publish
               </AdminButton>
             )}
             {status === "published" && (
-              <AdminButton disabled={busy} onClick={() => onSave(new Event("submit") as unknown as FormEvent, "draft")}>
+              <AdminButton disabled={busy || loadingProduct} onClick={() => onSave(new Event("submit") as unknown as FormEvent, "draft")}>
                 Unpublish to Draft
               </AdminButton>
             )}
             {status !== "archived" ? (
-              <AdminButton disabled={busy || !productId} onClick={() => onSave(new Event("submit") as unknown as FormEvent, "archived")}>
+              <AdminButton disabled={busy || loadingProduct || !productId} onClick={() => onSave(new Event("submit") as unknown as FormEvent, "archived")}>
                 Archive
               </AdminButton>
             ) : (
-              <AdminButton disabled={busy} onClick={() => onSave(new Event("submit") as unknown as FormEvent, "draft")}>
+              <AdminButton disabled={busy || loadingProduct} onClick={() => onSave(new Event("submit") as unknown as FormEvent, "draft")}>
                 Restore to Draft
               </AdminButton>
             )}
