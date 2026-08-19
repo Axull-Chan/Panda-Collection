@@ -48,8 +48,9 @@ export function CartPage() {
               {lines.map((line) => {
                 const product = products.find((p) => p.id === line.productId);
                 if (!product) return null;
-                const image =
-                  product.images?.find((i) => i.color === line.color)?.url ?? product.image;
+                // No fallback to product.image: a different colour's photo
+                // next to "Navy" would misrepresent what's in the cart.
+                const image = product.images?.find((i) => i.color === line.color)?.url;
                 return (
                   <motion.div
                     key={`${line.productId}-${line.size}-${line.color}`}

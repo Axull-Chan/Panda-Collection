@@ -283,8 +283,9 @@ export function CheckoutPage() {
           <div>
             {cartProducts.map(({ line, product }) => {
               if (!product) return null;
-              const image =
-                product.images?.find((i) => i.color === line.color)?.url ?? product.image;
+              // No fallback to product.image: a different colour's photo
+              // in the order summary would misrepresent what's being paid for.
+              const image = product.images?.find((i) => i.color === line.color)?.url;
               return (
                 <div
                   key={`${line.productId}-${line.size}-${line.color}`}

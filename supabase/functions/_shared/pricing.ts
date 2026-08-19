@@ -71,24 +71,20 @@ export async function resolveCartLines(admin: any, lines: CartLine[]): Promise<P
         status: 409,
       };
     }
-    // Prefer the shot tagged for the colour actually being purchased (alt
+    // Use the shot tagged for the colour actually being purchased (alt
     // text encodes it as "<name> - <colour>"), so Stripe's own hosted page
-    // shows the exact item — falls back to the product's general primary
-    // image for colours that only ever appeared in a group/detail shot.
-    // `is_primary` can only mark one row per product (DB constraint), so
-    // colour matching goes by alt text, not that flag; sort_order breaks
-    // ties among a colour's own shots.
-    const colorMatches = product.product_images
+    // shows the exact item. Deliberately no fallback to a generic/primary
+    // image here: showing a different colour's photo on the page a
+    // customer is paying from would misrepresent what they're buying — if
+    // this colour has no photo of its own yet, omit the image entirely
+    // rather than substitute a wrong one. `is_primary` can only mark one
+    // row per product (DB constraint), so colour matching goes by alt
+    // text, not that flag; sort_order breaks ties among a colour's shots.
+    const primary = product.product_images
       // deno-lint-ignore no-explicit-any
       .filter((i: any) => typeof i.alt === "string" && i.alt.endsWith(` - ${line.color}`))
       // deno-lint-ignore no-explicit-any
-      .sort((a: any, b: any) => a.sort_order - b.sort_order);
-    const primary =
-      colorMatches[0] ??
-      // deno-lint-ignore no-explicit-any
-      product.product_images.find((i: any) => i.is_primary) ??
-      // deno-lint-ignore no-explicit-any
-      [...product.product_images].sort((a: any, b: any) => a.sort_order - b.sort_order)[0];
+      .sort((a: any, b: any) => a.sort_order - b.sort_order)[0];
     resolved.push({
       variantId: variant.id,
       productId: product.id,

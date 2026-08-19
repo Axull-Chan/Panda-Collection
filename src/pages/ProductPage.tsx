@@ -67,9 +67,14 @@ export function ProductPage() {
 
   useEffect(() => {
     if (product && !selectedColor) {
-      const firstInStock =
-        colors.find((c) => (stockFor(product.sizes[0] ?? "", c) ?? 1) > 0) ?? colors[0] ?? "";
-      setSelectedColor(firstInStock);
+      // Prefer a colour that's both in stock AND has its own photo, so the
+      // page's first impression is always a real image — falls back to
+      // "just in stock" only if every in-stock colour lacks a photo.
+      const inStock = (c: string) => (stockFor(product.sizes[0] ?? "", c) ?? 1) > 0;
+      const hasPhoto = (c: string) => product.images?.some((i) => i.color === c) ?? false;
+      const best =
+        colors.find((c) => inStock(c) && hasPhoto(c)) ?? colors.find(inStock) ?? colors[0] ?? "";
+      setSelectedColor(best);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product]);
@@ -87,10 +92,12 @@ export function ProductPage() {
 
   // The hero image swaps to whichever shot is tagged for the selected
   // colour (images are already sorted by sort_order, so this is that
-  // colour's first/best shot); falls back to the product's default image
-  // for colours that only ever appeared in a group/detail shot.
-  const displayImage =
-    product?.images?.find((i) => i.color === selectedColor)?.url ?? product?.image ?? "";
+  // colour's first/best shot). Deliberately no fallback to the product's
+  // generic default image here: showing a different colour's photo reads
+  // as "this is what you're buying," which is worse than being honest that
+  // this specific colour doesn't have its own photo yet — the Image
+  // component's own empty-src state renders that clearly instead.
+  const displayImage = product?.images?.find((i) => i.color === selectedColor)?.url;
 
   if (!product && !listed && !unlistedChecked) {
     return <div className="min-h-svh" />;
