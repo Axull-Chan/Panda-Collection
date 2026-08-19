@@ -9,6 +9,7 @@ import {
   type CustomerProfile,
 } from "../lib/admin";
 import { formatOrderDate, formatStatus, orderNumber } from "../lib/orders";
+import { formatIDR } from "../lib/currency";
 import { Reveal } from "../components/Reveal";
 import { PageTitle } from "./ui";
 
@@ -132,7 +133,7 @@ export function AdminOrdersPage() {
                     <span className="label text-muted">{formatStatus(o.status)}</span>
                     <span className="label text-muted">· {formatStatus(o.payment_status)}</span>
                     <span className="label text-muted">· {formatStatus(o.shipping_status)}</span>
-                    <span className="label sm:ml-2">${o.total}</span>
+                    <span className="label sm:ml-2">{formatIDR(o.total)}</span>
                     <span className="label text-muted">{expanded ? "Close" : "Details"}</span>
                   </div>
                 </button>
@@ -170,7 +171,7 @@ export function AdminOrdersPage() {
                               {item.variant_label ?? "—"} · Qty {item.quantity}
                             </p>
                           </div>
-                          <p className="label shrink-0">${item.unit_price * item.quantity}</p>
+                          <p className="label shrink-0">{formatIDR(item.unit_price * item.quantity)}</p>
                         </div>
                       ))}
                     </div>
@@ -178,15 +179,15 @@ export function AdminOrdersPage() {
                       <div className="border-t border-line py-5">
                         <div className="flex justify-between">
                           <span className="label text-muted">Original Total</span>
-                          <span className="label">${o.subtotal}</span>
+                          <span className="label">{formatIDR(o.subtotal)}</span>
                         </div>
                         <div className="mt-2 flex justify-between">
                           <span className="label text-muted">Discount</span>
-                          <span className="label">−${o.discount}</span>
+                          <span className="label">−{formatIDR(o.discount)}</span>
                         </div>
                         <div className="mt-2 flex justify-between">
                           <span className="label">Final Paid</span>
-                          <span className="label">${o.total}</span>
+                          <span className="label">{formatIDR(o.total)}</span>
                         </div>
                       </div>
                     )}

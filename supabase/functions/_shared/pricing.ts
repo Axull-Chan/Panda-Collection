@@ -5,6 +5,7 @@
 export interface CartLine {
   productId: string; // product slug
   size: string;
+  color: string;
   quantity: number;
 }
 
@@ -34,7 +35,7 @@ export async function resolveCartLines(admin: any, lines: CartLine[]): Promise<P
     .from("products")
     .select(
       "id,slug,name,price,sale_price,status," +
-        "product_images(url,is_primary,sort_order)," +
+        "product_images(url,alt,is_primary,sort_order)," +
         "product_variants(id,size,color,stock)"
     )
     .in("slug", slugs);
@@ -49,11 +50,14 @@ export async function resolveCartLines(admin: any, lines: CartLine[]): Promise<P
       return { ok: false, error: "A product in your cart is no longer available.", status: 409 };
     }
     // deno-lint-ignore no-explicit-any
-    const variant = product.product_variants.find((v: any) => v.size === line.size);
+    const variant = product.product_variants.find(
+      // deno-lint-ignore no-explicit-any
+      (v: any) => v.size === line.size && v.color === line.color
+    );
     if (!variant) {
       return {
         ok: false,
-        error: `${product.name} is no longer available in size ${line.size}.`,
+        error: `${product.name} is no longer available in ${line.color} / ${line.size}.`,
         status: 409,
       };
     }
@@ -62,12 +66,25 @@ export async function resolveCartLines(admin: any, lines: CartLine[]): Promise<P
         ok: false,
         error:
           variant.stock === 0
-            ? `${product.name} (Size ${line.size}) just sold out.`
-            : `Only ${variant.stock} left of ${product.name} (Size ${line.size}).`,
+            ? `${product.name} (${line.color} / ${line.size}) just sold out.`
+            : `Only ${variant.stock} left of ${product.name} (${line.color} / ${line.size}).`,
         status: 409,
       };
     }
+    // Prefer the shot tagged for the colour actually being purchased (alt
+    // text encodes it as "<name> - <colour>"), so Stripe's own hosted page
+    // shows the exact item — falls back to the product's general primary
+    // image for colours that only ever appeared in a group/detail shot.
+    // `is_primary` can only mark one row per product (DB constraint), so
+    // colour matching goes by alt text, not that flag; sort_order breaks
+    // ties among a colour's own shots.
+    const colorMatches = product.product_images
+      // deno-lint-ignore no-explicit-any
+      .filter((i: any) => typeof i.alt === "string" && i.alt.endsWith(` - ${line.color}`))
+      // deno-lint-ignore no-explicit-any
+      .sort((a: any, b: any) => a.sort_order - b.sort_order);
     const primary =
+      colorMatches[0] ??
       // deno-lint-ignore no-explicit-any
       product.product_images.find((i: any) => i.is_primary) ??
       // deno-lint-ignore no-explicit-any

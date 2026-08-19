@@ -32,8 +32,13 @@ export type CouponValidation =
       message: string;
     };
 
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
+// IDR has no subdivision — round to the nearest whole Rupiah, not cents.
+function roundIDR(n: number): number {
+  return Math.round(n);
+}
+
+function formatIDR(n: number): string {
+  return `Rp${roundIDR(n).toLocaleString("id-ID")}`;
 }
 
 // deno-lint-ignore no-explicit-any
@@ -86,7 +91,7 @@ export async function validateCoupon(
     return {
       valid: false,
       reason: "min_order",
-      message: `This coupon requires a minimum purchase of $${coupon.min_order.toFixed(2)}.`,
+      message: `This coupon requires a minimum purchase of ${formatIDR(coupon.min_order)}.`,
     };
   }
 
@@ -96,7 +101,7 @@ export async function validateCoupon(
       : coupon.discount_value;
   if (coupon.max_discount != null) discountAmount = Math.min(discountAmount, coupon.max_discount);
   // Never discount more than the cart is worth — keeps total from going negative.
-  discountAmount = round2(Math.max(0, Math.min(discountAmount, subtotal)));
+  discountAmount = roundIDR(Math.max(0, Math.min(discountAmount, subtotal)));
 
   return { valid: true, coupon, discountAmount };
 }

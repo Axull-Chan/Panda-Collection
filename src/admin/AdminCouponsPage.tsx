@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { deleteCoupon, fetchAdminCoupons, setCouponActive, type AdminCoupon } from "../lib/coupons";
+import { formatIDR } from "../lib/currency";
 import { Reveal } from "../components/Reveal";
 import { AdminButton, PageTitle, StatusBadge } from "./ui";
 
 type StatusFilter = "all" | "active" | "inactive";
 
 function formatDiscount(c: AdminCoupon) {
-  return c.discount_type === "percent" ? `${c.discount_value}% off` : `$${c.discount_value} off`;
+  return c.discount_type === "percent"
+    ? `${c.discount_value}% off`
+    : `${formatIDR(c.discount_value)} off`;
 }
 
 function formatDate(iso: string | null) {
@@ -155,7 +158,7 @@ export function AdminCouponsPage() {
                   )}
                 </div>
                 <span className="label w-32">{formatDiscount(c)}</span>
-                <span className="label w-28">${c.min_order}</span>
+                <span className="label w-28">{formatIDR(c.min_order)}</span>
                 <span className="label w-28">
                   {c.used_count}
                   {c.max_uses != null ? ` / ${c.max_uses}` : " / ∞"}

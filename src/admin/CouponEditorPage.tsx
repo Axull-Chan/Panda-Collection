@@ -206,10 +206,10 @@ export function CouponEditorPage() {
             </select>
           </div>
           <AuthField
-            label={discountType === "percent" ? "Discount (%)" : "Discount ($)"}
+            label={discountType === "percent" ? "Discount (%)" : "Discount (Rp)"}
             type="number"
             min="0"
-            step="0.01"
+            step={discountType === "percent" ? "0.01" : "1"}
             required
             value={discountValue}
             onChange={(e) => setDiscountValue(e.target.value)}
@@ -219,19 +219,19 @@ export function CouponEditorPage() {
 
         <div className="grid grid-cols-2 gap-6">
           <AuthField
-            label="Minimum Purchase ($)"
+            label="Minimum Purchase (Rp)"
             type="number"
             min="0"
-            step="0.01"
+            step="1"
             value={minOrder}
             onChange={(e) => setMinOrder(e.target.value)}
             disabled={busy || loadingCoupon}
           />
           <AuthField
-            label="Maximum Discount ($, optional)"
+            label="Maximum Discount (Rp, optional)"
             type="number"
             min="0"
-            step="0.01"
+            step="1"
             value={maxDiscount}
             onChange={(e) => setMaxDiscount(e.target.value)}
             disabled={busy || loadingCoupon}

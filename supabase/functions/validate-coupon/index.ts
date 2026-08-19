@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
       discountValue: result.coupon.discount_value,
       discountAmount: result.discountAmount,
       subtotal: pricing.subtotal,
-      total: round2(pricing.subtotal - result.discountAmount),
+      total: roundIDR(pricing.subtotal - result.discountAmount),
     });
   } catch (err) {
     console.error("[validate-coupon]", err);
@@ -94,8 +94,9 @@ Deno.serve(async (req) => {
   }
 });
 
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
+// IDR has no subdivision — round to the nearest whole Rupiah, not cents.
+function roundIDR(n: number): number {
+  return Math.round(n);
 }
 
 function json(body: unknown, status = 200) {

@@ -54,8 +54,9 @@ interface RequestBody {
   origin: string;
 }
 
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
+// IDR has no subdivision — round to the nearest whole Rupiah, not cents.
+function roundIDR(n: number): number {
+  return Math.round(n);
 }
 
 Deno.serve(async (req) => {
@@ -206,7 +207,7 @@ Deno.serve(async (req) => {
         email: user.email,
         subtotal,
         discount,
-        total: round2(subtotal - discount),
+        total: roundIDR(subtotal - discount),
         shipping_address: address,
         ...couponFields,
       })
@@ -233,11 +234,13 @@ Deno.serve(async (req) => {
     // ignorance of our max_discount cap) drift from what we actually
     // decided to charge. This keeps our validation the single source of
     // truth; Stripe just applies the number.
+    // IDR is a zero-decimal currency in Stripe — unit_amount is the whole
+    // Rupiah amount itself, not cents. Never multiply by 100 here.
     let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
     if (discount > 0) {
       const stripeCoupon = await stripe.coupons.create({
-        amount_off: Math.round(discount * 100),
-        currency: "usd",
+        amount_off: Math.round(discount),
+        currency: "idr",
         duration: "once",
         name: couponFields ? `Coupon ${couponFields.coupon_code}` : "Discount",
         metadata: { order_id: order.id },
@@ -251,8 +254,8 @@ Deno.serve(async (req) => {
       line_items: resolved.map((r) => ({
         quantity: r.quantity,
         price_data: {
-          currency: "usd",
-          unit_amount: Math.round(r.unitPrice * 100),
+          currency: "idr",
+          unit_amount: Math.round(r.unitPrice),
           product_data: {
             name: r.productName,
             description: r.variantLabel,

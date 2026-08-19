@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchAdminOrders, fetchCustomers, type AdminOrder, type CustomerProfile } from "../lib/admin";
 import { formatOrderDate } from "../lib/orders";
+import { formatIDR } from "../lib/currency";
 import { Reveal } from "../components/Reveal";
 import { PageTitle } from "./ui";
 
@@ -98,7 +99,7 @@ export function AdminCustomersPage() {
                 <span className="label w-full truncate text-muted sm:w-56">{c.email ?? "—"}</span>
                 <span className="label w-32 text-muted">{formatOrderDate(c.created_at)}</span>
                 <span className="label w-20">{s?.count ?? 0}</span>
-                <span className="label w-24">${s?.spend ?? 0}</span>
+                <span className="label w-24">{formatIDR(s?.spend ?? 0)}</span>
               </div>
             );
           })}

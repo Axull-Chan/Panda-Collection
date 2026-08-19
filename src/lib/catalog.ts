@@ -19,7 +19,7 @@ interface ProductRow {
   edition_size: number;
   release_index: number | null;
   categories: CategoryRow | CategoryRow[] | null;
-  product_images: { url: string; is_primary: boolean; sort_order: number }[];
+  product_images: { url: string; alt: string | null; is_primary: boolean; sort_order: number }[];
   product_variants: { id: string; size: string; color: string; stock: number }[];
 }
 
@@ -31,7 +31,7 @@ interface ProductRow {
 const CATALOG_SELECT =
   "id,slug,name,description,price,sale_price,badge,edition_size,release_index," +
   "categories(slug)," +
-  "product_images(url,is_primary,sort_order)," +
+  "product_images(url,alt,is_primary,sort_order)," +
   "product_variants(id,size,color,stock)";
 
 export async function fetchCatalog(): Promise<Product[] | null> {
@@ -75,11 +75,18 @@ export async function fetchProductBySlug(slug: string): Promise<Product | null> 
   return mapRow(res.data as unknown as ProductRow);
 }
 
+// Migration-authored alt text encodes colour as "<name> - <colour>"; images
+// without that suffix (group/detail shots) are left uncoloured and only
+// ever appear in the full gallery, never picked for a colour swap.
+function colorFromAlt(alt: string | null): string | null {
+  if (!alt || !alt.includes(" - ")) return null;
+  return alt.slice(alt.lastIndexOf(" - ") + 3);
+}
+
 function mapRow(row: ProductRow): Product {
   const category = Array.isArray(row.categories) ? row.categories[0] : row.categories;
-  const primary =
-    row.product_images.find((i) => i.is_primary) ??
-    [...row.product_images].sort((a, b) => a.sort_order - b.sort_order)[0];
+  const sortedImages = [...row.product_images].sort((a, b) => a.sort_order - b.sort_order);
+  const primary = row.product_images.find((i) => i.is_primary) ?? sortedImages[0];
   const sizes = [...new Set(row.product_variants.map((v) => v.size))].sort(
     (a, b) => SIZE_ORDER.indexOf(a) - SIZE_ORDER.indexOf(b)
   );
@@ -98,5 +105,11 @@ function mapRow(row: ProductRow): Product {
     dbId: row.id,
     status: row.status ?? "published",
     variants: row.product_variants,
+    images: sortedImages.map((i) => ({
+      url: i.url,
+      color: colorFromAlt(i.alt),
+      isPrimary: i.is_primary,
+      sortOrder: i.sort_order,
+    })),
   };
 }

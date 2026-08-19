@@ -397,7 +397,7 @@ export function ProductEditorPage() {
           </div>
           <div className="grid grid-cols-2 gap-6">
             <AuthField
-              label="Price ($)"
+              label="Price (Rp)"
               type="number"
               min="0"
               required
@@ -406,7 +406,7 @@ export function ProductEditorPage() {
               disabled={busy}
             />
             <AuthField
-              label="Sale Price ($, optional)"
+              label="Sale Price (Rp, optional)"
               type="number"
               min="0"
               value={salePrice}

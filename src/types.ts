@@ -15,6 +15,14 @@ export interface ProductVariant {
   stock: number;
 }
 
+export interface ProductImage {
+  url: string;
+  /** Parsed from the image's alt text; null for shots not tied to one colour (group/detail shots). */
+  color: string | null;
+  isPrimary: boolean;
+  sortOrder: number;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -32,10 +40,13 @@ export interface Product {
   status?: string;
   /** Size/colour variants with stock — present when loaded from Supabase */
   variants?: ProductVariant[];
+  /** Full image gallery, tagged by colour where known — present when loaded from Supabase */
+  images?: ProductImage[];
 }
 
 export interface CartLine {
   productId: string;
   size: string;
+  color: string;
   quantity: number;
 }

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { fetchAdminOrders, fetchAdminProducts, fetchAdminStats } from "../lib/admin";
 import type { AdminOrder, AdminProduct, AdminStats } from "../lib/admin";
 import { formatOrderDate, formatStatus, orderNumber } from "../lib/orders";
+import { formatIDR } from "../lib/currency";
 import { Reveal } from "../components/Reveal";
 import { Image } from "../components/Image";
 import { PageTitle, StatTile, StatusBadge } from "./ui";
@@ -68,10 +69,10 @@ export function DashboardPage() {
           <div className="mt-3 grid grid-cols-1 gap-3 sm:mt-4 sm:gap-4 lg:grid-cols-2">
             <StatTile
               label="Revenue — Paid"
-              value={`$${stats.revenuePaid}`}
+              value={formatIDR(stats.revenuePaid)}
               hint="Confirmed Stripe payments"
             />
-            <StatTile label="Open Order Value" value={`$${stats.totalOrderValue}`} />
+            <StatTile label="Open Order Value" value={formatIDR(stats.totalOrderValue)} />
           </div>
         </Reveal>
       )}
@@ -102,7 +103,7 @@ export function DashboardPage() {
                   </div>
                   <div className="flex shrink-0 items-center gap-4">
                     <span className="label text-muted">{formatStatus(o.status)}</span>
-                    <span className="label">${o.total}</span>
+                    <span className="label">{formatIDR(o.total)}</span>
                   </div>
                 </Link>
               ))}

@@ -23,9 +23,9 @@ function loadLines(): CartLine[] {
 interface CartContextValue {
   lines: CartLine[];
   itemCount: number;
-  addToCart: (productId: string, size: string) => void;
-  removeLine: (productId: string, size: string) => void;
-  updateQuantity: (productId: string, size: string, quantity: number) => void;
+  addToCart: (productId: string, size: string, color: string) => void;
+  removeLine: (productId: string, size: string, color: string) => void;
+  updateQuantity: (productId: string, size: string, color: string, quantity: number) => void;
   clearCart: () => void;
   subtotal: number;
 }
@@ -44,36 +44,38 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   }, [lines]);
 
-  const addToCart = (productId: string, size: string) => {
+  const addToCart = (productId: string, size: string, color: string) => {
     setLines((prev) => {
       const existing = prev.find(
-        (l) => l.productId === productId && l.size === size
+        (l) => l.productId === productId && l.size === size && l.color === color
       );
       if (existing) {
         return prev.map((l) =>
-          l.productId === productId && l.size === size
+          l.productId === productId && l.size === size && l.color === color
             ? { ...l, quantity: l.quantity + 1 }
             : l
         );
       }
-      return [...prev, { productId, size, quantity: 1 }];
+      return [...prev, { productId, size, color, quantity: 1 }];
     });
   };
 
-  const removeLine = (productId: string, size: string) => {
+  const removeLine = (productId: string, size: string, color: string) => {
     setLines((prev) =>
-      prev.filter((l) => !(l.productId === productId && l.size === size))
+      prev.filter((l) => !(l.productId === productId && l.size === size && l.color === color))
     );
   };
 
-  const updateQuantity = (productId: string, size: string, quantity: number) => {
+  const updateQuantity = (productId: string, size: string, color: string, quantity: number) => {
     if (quantity <= 0) {
-      removeLine(productId, size);
+      removeLine(productId, size, color);
       return;
     }
     setLines((prev) =>
       prev.map((l) =>
-        l.productId === productId && l.size === size ? { ...l, quantity } : l
+        l.productId === productId && l.size === size && l.color === color
+          ? { ...l, quantity }
+          : l
       )
     );
   };

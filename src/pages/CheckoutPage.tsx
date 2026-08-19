@@ -9,6 +9,7 @@ import { supabase } from "../lib/supabase";
 import { AuthCheckbox, AuthError, AuthField, AuthSubmit } from "../components/auth/AuthField";
 import { Reveal } from "../components/Reveal";
 import { Image } from "../components/Image";
+import { formatIDR } from "../lib/currency";
 import { pageVariants } from "../lib/motionVariants";
 
 interface AppliedCoupon {
@@ -280,27 +281,27 @@ export function CheckoutPage() {
         <Reveal delay={0.1} className="lg:col-span-5 lg:col-start-8">
           <p className="label border-b border-line pb-4">Your Order</p>
           <div>
-            {cartProducts.map(({ line, product }) =>
-              product ? (
+            {cartProducts.map(({ line, product }) => {
+              if (!product) return null;
+              const image =
+                product.images?.find((i) => i.color === line.color)?.url ?? product.image;
+              return (
                 <div
-                  key={`${line.productId}-${line.size}`}
+                  key={`${line.productId}-${line.size}-${line.color}`}
                   className="flex items-center gap-5 border-b border-line py-5"
                 >
-                  <Image
-                    src={product.image}
-                    alt={product.name}
-                    className="h-20 w-[60px] shrink-0"
-                  />
+                  <Image src={image} alt={product.name} className="h-20 w-[60px] shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-serif text-lg leading-tight">{product.name}</p>
                     <p className="label mt-1 text-muted">
-                      Size {line.size} · Qty {line.quantity}
+                      {line.color !== "One Colour" ? `${line.color} · ` : ""}Size {line.size} · Qty{" "}
+                      {line.quantity}
                     </p>
                   </div>
-                  <p className="label shrink-0">${product.price * line.quantity}</p>
+                  <p className="label shrink-0">{formatIDR(product.price * line.quantity)}</p>
                 </div>
-              ) : null
-            )}
+              );
+            })}
           </div>
 
           {/* Coupon */}
@@ -312,7 +313,7 @@ export function CheckoutPage() {
                   <p className="label mt-1.5 text-muted">
                     {appliedCoupon.discountType === "percent"
                       ? `${appliedCoupon.discountValue}% off`
-                      : `$${appliedCoupon.discountValue} off`}
+                      : `${formatIDR(appliedCoupon.discountValue)} off`}
                   </p>
                 </div>
                 <button
@@ -358,7 +359,7 @@ export function CheckoutPage() {
 
           <div className="flex justify-between pt-6">
             <span className="label text-muted">Subtotal</span>
-            <span className="label">${subtotal}</span>
+            <span className="label">{formatIDR(subtotal)}</span>
           </div>
           <div className="mt-3 flex justify-between">
             <span className="label text-muted">Shipping</span>
@@ -367,12 +368,12 @@ export function CheckoutPage() {
           {appliedCoupon && (
             <div className="mt-3 flex justify-between">
               <span className="label text-muted">Discount</span>
-              <span className="label">−${discount.toFixed(2)}</span>
+              <span className="label">−{formatIDR(discount)}</span>
             </div>
           )}
           <div className="mt-6 flex justify-between border-t border-line pt-6">
             <span className="label">Total</span>
-            <span className="label">${total.toFixed(2)}</span>
+            <span className="label">{formatIDR(total)}</span>
           </div>
         </Reveal>
       </div>

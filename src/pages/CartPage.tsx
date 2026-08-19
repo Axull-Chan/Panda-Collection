@@ -4,6 +4,7 @@ import { useCart } from "../context/CartContext";
 import { useProducts } from "../context/ProductsContext";
 import { useAuth } from "../context/AuthContext";
 import { Image } from "../components/Image";
+import { formatIDR } from "../lib/currency";
 import { EASE, pageVariants } from "../lib/motionVariants";
 
 export function CartPage() {
@@ -47,9 +48,11 @@ export function CartPage() {
               {lines.map((line) => {
                 const product = products.find((p) => p.id === line.productId);
                 if (!product) return null;
+                const image =
+                  product.images?.find((i) => i.color === line.color)?.url ?? product.image;
                 return (
                   <motion.div
-                    key={`${line.productId}-${line.size}`}
+                    key={`${line.productId}-${line.size}-${line.color}`}
                     layout
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
@@ -61,7 +64,7 @@ export function CartPage() {
                       <div className="flex gap-4 sm:contents">
                         <Link to={`/product/${product.id}`} className="block shrink-0">
                           <Image
-                            src={product.image}
+                            src={image}
                             alt={product.name}
                             className="h-24 w-[72px] sm:h-32 sm:w-24"
                           />
@@ -74,8 +77,10 @@ export function CartPage() {
                           >
                             {product.name}
                           </Link>
-                          <p className="label mt-1.5 text-muted sm:mt-2">Size {line.size}</p>
-                          <p className="label mt-1.5 sm:mt-2">${product.price}</p>
+                          <p className="label mt-1.5 text-muted sm:mt-2">
+                            {line.color !== "One Colour" ? `${line.color} · ` : ""}Size {line.size}
+                          </p>
+                          <p className="label mt-1.5 sm:mt-2">{formatIDR(product.price)}</p>
                         </div>
                       </div>
 
@@ -84,7 +89,7 @@ export function CartPage() {
                           <button
                             type="button"
                             onClick={() =>
-                              updateQuantity(line.productId, line.size, line.quantity - 1)
+                              updateQuantity(line.productId, line.size, line.color, line.quantity - 1)
                             }
                             className="h-9 w-9 border border-line text-sm transition-colors hover:border-ink"
                             aria-label="Decrease quantity"
@@ -95,7 +100,7 @@ export function CartPage() {
                           <button
                             type="button"
                             onClick={() =>
-                              updateQuantity(line.productId, line.size, line.quantity + 1)
+                              updateQuantity(line.productId, line.size, line.color, line.quantity + 1)
                             }
                             className="h-9 w-9 border border-line text-sm transition-colors hover:border-ink"
                             aria-label="Increase quantity"
@@ -106,7 +111,7 @@ export function CartPage() {
 
                         <button
                           type="button"
-                          onClick={() => removeLine(line.productId, line.size)}
+                          onClick={() => removeLine(line.productId, line.size, line.color)}
                           className="label link-underline text-muted transition-colors hover:text-ink"
                         >
                           Remove
@@ -130,7 +135,7 @@ export function CartPage() {
                   transition={{ duration: 0.25 }}
                   className="label"
                 >
-                  ${subtotal}
+                  {formatIDR(subtotal)}
                 </motion.span>
               </div>
               <p className="mt-4 text-xs leading-relaxed text-muted">

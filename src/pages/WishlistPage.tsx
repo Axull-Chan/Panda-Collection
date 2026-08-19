@@ -7,6 +7,7 @@ import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
 import { Reveal } from "../components/Reveal";
 import { Image } from "../components/Image";
+import { formatIDR } from "../lib/currency";
 import { pageVariants } from "../lib/motionVariants";
 import type { Product } from "../types";
 
@@ -16,10 +17,11 @@ function WishlistCard({ product, index }: { product: Product; index: number }) {
   const [added, setAdded] = useState(false);
 
   const defaultSize = product.sizes[0];
+  const defaultColor = product.variants?.[0]?.color ?? "One Colour";
 
   const onAdd = () => {
     if (!defaultSize) return;
-    addToCart(product.id, defaultSize);
+    addToCart(product.id, defaultSize, defaultColor);
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -36,7 +38,7 @@ function WishlistCard({ product, index }: { product: Product; index: number }) {
           <Link to={`/product/${product.id}`} className="block">
             <h3 className="font-serif text-base leading-tight sm:text-2xl">{product.name}</h3>
           </Link>
-          <p className="label mt-1.5 sm:mt-2">${product.price}</p>
+          <p className="label mt-1.5 sm:mt-2">{formatIDR(product.price)}</p>
           <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3 sm:mt-4 sm:pt-4">
             <button type="button" onClick={onAdd} className="label link-underline text-left">
               {added ? `Added — Size ${defaultSize}` : "Add to Cart"}

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import type { Product } from "../types";
 import { Reveal } from "./Reveal";
 import { Image } from "./Image";
+import { formatIDR } from "../lib/currency";
 
 export function ProductCard({ product, delay = 0 }: { product: Product; delay?: number }) {
   return (
@@ -22,7 +23,7 @@ export function ProductCard({ product, delay = 0 }: { product: Product; delay?: 
           {product.name}
         </h3>
         <div className="mt-1.5 flex items-baseline justify-between gap-2 sm:mt-2 sm:gap-4">
-          <p className="label">${product.price}</p>
+          <p className="label">{formatIDR(product.price)}</p>
           <span className="label link-underline hidden text-muted transition-colors group-hover:text-ink sm:inline">
             View Details
           </span>

@@ -7,6 +7,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
 import { fetchProductBySlug } from "../lib/catalog";
+import { formatIDR } from "../lib/currency";
 import { EASE, pageVariants } from "../lib/motionVariants";
 import { Image } from "../components/Image";
 import type { Product } from "../types";
@@ -43,24 +44,53 @@ export function ProductPage() {
   const product = listed ?? unlisted ?? undefined;
   const isPreview = !!product && (product.status ?? "published") !== "published";
 
-  const stockFor = (size: string) =>
+  // Every current variant shares one default colour ("One Colour") unless
+  // the catalog actually offers a choice — only show the picker when there
+  // is one to make.
+  const colors = product?.variants
+    ? [...new Set(product.variants.map((v) => v.color))]
+    : [];
+  const hasColorChoice = colors.length > 1;
+
+  const stockFor = (size: string, color?: string) =>
     product?.variants
-      ? product.variants.filter((v) => v.size === size).reduce((s, v) => s + v.stock, 0)
+      ? product.variants
+          .filter((v) => v.size === size && (color === undefined || v.color === color))
+          .reduce((s, v) => s + v.stock, 0)
       : null;
   const soldOut = product?.variants ? product.variants.every((v) => v.stock === 0) : false;
 
   const [selectedSize, setSelectedSize] = useState("");
+  const [selectedColor, setSelectedColor] = useState("");
   const [added, setAdded] = useState(false);
   const [wishlistError, setWishlistError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (product && !selectedSize) {
+    if (product && !selectedColor) {
       const firstInStock =
-        product.sizes.find((s) => (stockFor(s) ?? 1) > 0) ?? product.sizes[0] ?? "";
-      setSelectedSize(firstInStock);
+        colors.find((c) => (stockFor(product.sizes[0] ?? "", c) ?? 1) > 0) ?? colors[0] ?? "";
+      setSelectedColor(firstInStock);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product]);
+
+  useEffect(() => {
+    if (product && !selectedSize) {
+      const firstInStock =
+        product.sizes.find((s) => (stockFor(s, selectedColor || undefined) ?? 1) > 0) ??
+        product.sizes[0] ??
+        "";
+      setSelectedSize(firstInStock);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product, selectedColor]);
+
+  // The hero image swaps to whichever shot is tagged for the selected
+  // colour (images are already sorted by sort_order, so this is that
+  // colour's first/best shot); falls back to the product's default image
+  // for colours that only ever appeared in a group/detail shot.
+  const displayImage =
+    product?.images?.find((i) => i.color === selectedColor)?.url ?? product?.image ?? "";
 
   if (!product && !listed && !unlistedChecked) {
     return <div className="min-h-svh" />;
@@ -88,11 +118,11 @@ export function ProductPage() {
     );
   }
 
-  const selectedOut = (stockFor(selectedSize) ?? 1) === 0;
+  const selectedOut = (stockFor(selectedSize, selectedColor || undefined) ?? 1) === 0;
 
   const handleAddToCart = () => {
     if (soldOut || selectedOut || isPreview) return;
-    addToCart(product.id, selectedSize);
+    addToCart(product.id, selectedSize, selectedColor || "One Colour");
     setAdded(true);
     setTimeout(() => setAdded(false), 1800);
   };
@@ -128,7 +158,7 @@ export function ProductPage() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, ease: EASE }}
         >
-          <Image src={product.image} alt={product.name} aspectRatio="3/4" priority />
+          <Image src={displayImage} alt={product.name} aspectRatio="3/4" priority />
         </motion.div>
 
         <motion.div
@@ -144,7 +174,7 @@ export function ProductPage() {
           <h1 className="mt-3 font-serif text-4xl leading-[1.05] sm:mt-4 sm:text-5xl">
             {product.name}
           </h1>
-          <p className="label mt-6">${product.price}</p>
+          <p className="label mt-6">{formatIDR(product.price)}</p>
           <p className="label mt-2 text-muted">
             Numbered edition of {product.edition} — No. {product.releaseIndex}
           </p>
@@ -153,11 +183,40 @@ export function ProductPage() {
             {product.description}
           </p>
 
+          {hasColorChoice && (
+            <div className="mt-10">
+              <p className="label">Color — {selectedColor}</p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                {colors.map((color) => {
+                  const out = (stockFor(selectedSize, color) ?? 1) === 0;
+                  return (
+                    <button
+                      key={color}
+                      type="button"
+                      onClick={() => !out && setSelectedColor(color)}
+                      aria-pressed={selectedColor === color}
+                      disabled={out}
+                      className={`label h-12 border px-4 transition-colors duration-300 ${
+                        out
+                          ? "cursor-not-allowed border-line text-muted line-through opacity-50"
+                          : selectedColor === color
+                            ? "border-ink bg-ink text-bg"
+                            : "border-line text-ink hover:border-ink"
+                      }`}
+                    >
+                      {color}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="mt-12">
             <p className="label">Size</p>
             <div className="mt-4 flex flex-wrap gap-3">
               {product.sizes.map((size) => {
-                const out = (stockFor(size) ?? 1) === 0;
+                const out = (stockFor(size, selectedColor || undefined) ?? 1) === 0;
                 return (
                   <button
                     key={size}

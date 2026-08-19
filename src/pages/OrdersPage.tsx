@@ -12,6 +12,7 @@ import {
 } from "../lib/orders";
 import { Reveal } from "../components/Reveal";
 import { Image } from "../components/Image";
+import { formatIDR } from "../lib/currency";
 import { pageVariants } from "../lib/motionVariants";
 
 function orderImage(item: OrderRecord["order_items"][number]) {
@@ -31,7 +32,7 @@ export function OrderBlock({ order }: { order: OrderRecord }) {
           <span className="label text-muted">{formatStatus(order.status)}</span>
           <span className="label text-muted">· {formatStatus(order.payment_status)}</span>
           <span className="label text-muted">· {formatStatus(order.shipping_status)}</span>
-          <span className="label sm:ml-3">${order.total}</span>
+          <span className="label sm:ml-3">{formatIDR(order.total)}</span>
         </div>
       </header>
       <div className="px-5 sm:px-8">
@@ -66,7 +67,7 @@ export function OrderBlock({ order }: { order: OrderRecord }) {
                   {item.variant_label ?? ""} · Qty {item.quantity}
                 </p>
               </div>
-              <p className="label shrink-0">${item.unit_price * item.quantity}</p>
+              <p className="label shrink-0">{formatIDR(item.unit_price * item.quantity)}</p>
             </div>
           );
         })}
@@ -75,18 +76,18 @@ export function OrderBlock({ order }: { order: OrderRecord }) {
         <div className="border-t border-line px-5 py-5 sm:px-8">
           <div className="flex justify-between">
             <span className="label text-muted">Original Total</span>
-            <span className="label">${order.subtotal}</span>
+            <span className="label">{formatIDR(order.subtotal)}</span>
           </div>
           <div className="mt-2 flex justify-between">
             <span className="label text-muted">
               Coupon {order.coupon_code}
               {order.discount_type === "percent" ? ` (${order.discount_value}%)` : ""}
             </span>
-            <span className="label">−${order.discount}</span>
+            <span className="label">−{formatIDR(order.discount)}</span>
           </div>
           <div className="mt-3 flex justify-between border-t border-line pt-3">
             <span className="label">Final Total Paid</span>
-            <span className="label">${order.total}</span>
+            <span className="label">{formatIDR(order.total)}</span>
           </div>
         </div>
       )}

@@ -11,6 +11,7 @@ import {
   type AdminProduct,
   type Taxonomy,
 } from "../lib/admin";
+import { formatIDR } from "../lib/currency";
 import { Reveal } from "../components/Reveal";
 import { Image } from "../components/Image";
 import { AdminButton, PageTitle, StatusBadge } from "./ui";
@@ -299,9 +300,9 @@ export function AdminProductsPage() {
                     </p>
                   </div>
                   <span className="label w-24">
-                    ${p.price}
+                    {formatIDR(p.price)}
                     {p.sale_price != null && (
-                      <span className="ml-1 text-muted line-through">${p.sale_price}</span>
+                      <span className="ml-1 text-muted line-through">{formatIDR(p.sale_price)}</span>
                     )}
                   </span>
                   <span

@@ -15,6 +15,7 @@ import {
 import { Reveal } from "../components/Reveal";
 import { Image } from "../components/Image";
 import { AuthError, AuthField, AuthSubmit } from "../components/auth/AuthField";
+import { formatIDR } from "../lib/currency";
 import { pageVariants } from "../lib/motionVariants";
 
 function AccountSection({
@@ -226,7 +227,7 @@ export function AccountPage() {
                     </div>
                     <div className="flex items-center gap-5">
                       <span className="label text-muted">{formatStatus(order.status)}</span>
-                      <span className="label">${order.total}</span>
+                      <span className="label">{formatIDR(order.total)}</span>
                     </div>
                   </Link>
                 ))}
