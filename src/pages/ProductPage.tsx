@@ -175,9 +175,6 @@ export function ProductPage() {
             {product.name}
           </h1>
           <p className="label mt-6">{formatIDR(product.price)}</p>
-          <p className="label mt-2 text-muted">
-            Numbered edition of {product.edition} — No. {product.releaseIndex}
-          </p>
 
           <p className="mt-8 max-w-[400px] text-sm leading-relaxed text-muted">
             {product.description}

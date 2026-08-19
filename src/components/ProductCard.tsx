@@ -12,13 +12,10 @@ export function ProductCard({ product, delay = 0 }: { product: Product; delay?: 
           <div className="pointer-events-none absolute inset-0 bg-ink/0 transition-colors duration-500 group-hover:bg-ink/10" />
         </Image>
 
-        <div className="mt-3 flex items-baseline justify-between gap-2 sm:mt-5 sm:gap-4">
-          <p className="label min-w-0 truncate text-muted sm:overflow-visible sm:whitespace-normal">
-            {product.category}
-            {product.badge ? ` — ${product.badge}` : ""}
-          </p>
-          <p className="label hidden shrink-0 text-muted sm:inline">No. {product.releaseIndex}/20</p>
-        </div>
+        <p className="label mt-3 min-w-0 truncate text-muted sm:mt-5 sm:overflow-visible sm:whitespace-normal">
+          {product.category}
+          {product.badge ? ` — ${product.badge}` : ""}
+        </p>
         <h3 className="mt-1.5 font-serif text-base leading-tight sm:mt-2 sm:text-2xl">
           {product.name}
         </h3>
