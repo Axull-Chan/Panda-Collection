@@ -51,7 +51,11 @@ function SectionHeader({
 
 export function HomePage() {
   const { products } = useProducts();
-  const featured = products.filter((p) => p.badge === "SIGNATURE").slice(0, 3);
+  // Prefer badge="SIGNATURE" pieces; if the catalog doesn't have three
+  // (e.g. none are marked signature yet), fall back to the first three
+  // published products so the homepage never has fewer than it can render.
+  const signature = products.filter((p) => p.badge === "SIGNATURE").slice(0, 3);
+  const featured = signature.length >= 3 ? signature : products.slice(0, 3);
   const [heroFailed, setHeroFailed] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
@@ -133,15 +137,21 @@ export function HomePage() {
           linkText="View all garments"
         />
         <div className="mt-10 grid grid-cols-1 gap-x-8 gap-y-12 sm:mt-16 sm:gap-y-20 lg:grid-cols-12">
-          <div className="lg:col-span-5">
-            <ProductCard product={featured[0]} />
-          </div>
-          <div className="lg:col-span-4 lg:col-start-8 lg:mt-40">
-            <ProductCard product={featured[1]} delay={0.1} />
-          </div>
-          <div className="lg:col-span-5 lg:col-start-3 lg:-mt-8">
-            <ProductCard product={featured[2]} delay={0.05} />
-          </div>
+          {featured[0] && (
+            <div className="lg:col-span-5">
+              <ProductCard product={featured[0]} />
+            </div>
+          )}
+          {featured[1] && (
+            <div className="lg:col-span-4 lg:col-start-8 lg:mt-40">
+              <ProductCard product={featured[1]} delay={0.1} />
+            </div>
+          )}
+          {featured[2] && (
+            <div className="lg:col-span-5 lg:col-start-3 lg:-mt-8">
+              <ProductCard product={featured[2]} delay={0.05} />
+            </div>
+          )}
         </div>
       </section>
 
