@@ -2,43 +2,6 @@ import type { Product } from "../types";
 
 export const products: Product[] = [
   {
-    id: "wool-cocoon-coat",
-    name: "Gabardine Trench Coat",
-    price: 820,
-    category: "COATS",
-    sizes: ["XS", "S", "M", "L"],
-    image: "/images/trench.jpg",
-    badge: "SIGNATURE",
-    edition: 20,
-    releaseIndex: 1,
-    description:
-      "A full-length trench in washed gabardine, cut to fall in a single unbroken line from the shoulder. Numbered edition of twenty, each piece hand-finished.",
-  },
-  {
-    id: "structured-wrap-coat",
-    name: "Suede Chore Jacket",
-    price: 740,
-    category: "COATS",
-    sizes: ["XS", "S", "M", "L", "XL"],
-    image: "/images/suede-jacket.jpg",
-    edition: 20,
-    releaseIndex: 2,
-    description:
-      "A boxy chore jacket in chocolate suede with a zip front and snap pockets, cut to sit square on the shoulder.",
-  },
-  {
-    id: "raw-edge-overcoat",
-    name: "Souvenir Blouson",
-    price: 890,
-    category: "COATS",
-    sizes: ["S", "M", "L"],
-    image: "/images/souvenir-blouson.jpg",
-    edition: 20,
-    releaseIndex: 3,
-    description:
-      "A satin souvenir blouson with contrast raglan sleeves and striped ribbing, embroidered by hand in the atelier.",
-  },
-  {
     id: "cable-knit-sweater",
     name: "Embroidered Ringer Tee",
     price: 340,
@@ -62,18 +25,6 @@ export const products: Product[] = [
     releaseIndex: 5,
     description:
       "A close, fine-gauge rib with a clean mockneck collar, cut short to sit above a wide trouser. The foundation piece of the collection.",
-  },
-  {
-    id: "cropped-cardigan",
-    name: "Cropped Bomber Jacket",
-    price: 310,
-    category: "COATS",
-    sizes: ["XS", "S", "M"],
-    image: "/images/bomber.jpg",
-    edition: 20,
-    releaseIndex: 6,
-    description:
-      "A cropped nylon bomber with a double-layer storm collar, harness straps, and gunmetal hardware.",
   },
   {
     id: "oversized-alpaca-knit",

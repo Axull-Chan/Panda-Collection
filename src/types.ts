@@ -1,5 +1,5 @@
 export type Category =
-  | "COATS"
+  | "T-SHIRTS"
   | "KNITWEAR"
   | "SHIRTS"
   | "TROUSERS"

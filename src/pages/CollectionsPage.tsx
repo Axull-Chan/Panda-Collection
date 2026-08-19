@@ -9,7 +9,7 @@ import { pageVariants } from "../lib/motionVariants";
 
 const CATEGORIES: (Category | "ALL")[] = [
   "ALL",
-  "COATS",
+  "T-SHIRTS",
   "KNITWEAR",
   "SHIRTS",
   "TROUSERS",
