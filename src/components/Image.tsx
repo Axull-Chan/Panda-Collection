@@ -83,6 +83,14 @@ export function Image({
     >
       {status !== "error" && src && (
         <img
+          // A ref callback only fires on mount/unmount — when `src` changes
+          // on an already-mounted <img> (e.g. switching colour on the same
+          // product, or navigating product-to-product without the page
+          // remounting), React just updates the attribute in place and the
+          // callback never re-runs, so the new image's load event is never
+          // listened for and it stays stuck at opacity: 0 forever. Keying
+          // on `src` forces a fresh node — and a fresh ref call — per image.
+          key={src}
           ref={attachLoadListeners}
           src={src}
           alt={alt}
