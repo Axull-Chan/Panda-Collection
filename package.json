@@ -1,8 +1,36 @@
 {
-  "name": "project",
+  "name": "panda-collection",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.7.0",
   "type": "module",
+  "description": "ANITA — a full-stack luxury e-commerce platform with real Stripe payments, a server-validated coupon engine, inventory management, and a complete admin dashboard. Built with React, TypeScript, Supabase, and Stripe; verified by a 157-test Playwright suite against the live deployment.",
+  "keywords": [
+    "react",
+    "typescript",
+    "supabase",
+    "stripe",
+    "postgresql",
+    "ecommerce",
+    "full-stack",
+    "playwright",
+    "vite",
+    "tailwindcss",
+    "row-level-security",
+    "portfolio-project"
+  ],
+  "homepage": "https://panda-collection.vercel.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Axull-Chan/Panda-Collection.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Axull-Chan/Panda-Collection/issues"
+  },
+  "author": {
+    "name": "Axel Valentino",
+    "url": "https://github.com/Axull-Chan"
+  },
+  "license": "MIT",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

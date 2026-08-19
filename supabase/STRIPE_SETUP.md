@@ -112,10 +112,13 @@ expiry, any 3-digit CVC, any postal code):
   minutes to hours later when Stripe's session expires and fires
   `checkout.session.expired` — no manual cleanup needed.
 
-## What I can't verify without your keys
+## Status
 
-I don't have Stripe test keys or CLI access to your Supabase project, so
-the payment flow above is built and code-reviewed but not yet exercised
-end-to-end. Once you've completed steps 1–6, tell me and I'll walk through
-a live test payment with you and confirm the order/stock/webhook chain
-end-to-end.
+This flow is fully built, deployed, and verified end-to-end — both
+manually and by the automated suite in
+[`tests/payments/`](../tests/payments) and
+[`tests/coupons/coupons.spec.ts`](../tests/coupons/coupons.spec.ts) (the
+latter covers a real, coupon-discounted Stripe payment). See
+[`docs/stripe-flow.md`](../docs/stripe-flow.md) for the conceptual
+walkthrough, and [DEPLOYMENT.md](../DEPLOYMENT.md#connecting-stripe--going-to-live-mode)
+for switching from Test Mode to Live Mode.

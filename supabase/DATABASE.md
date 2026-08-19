@@ -5,10 +5,14 @@ Supabase. Designed from an analysis of the actual frontend: product URLs use
 slugs, the UI needs a category, sizes, one primary image, a badge, an edition
 number, and a release index for sorting — all preserved here.
 
+> For the conceptual schema overview, ERD, and security model in the context
+> of the full current application, see [`docs/database.md`](../docs/database.md)
+> at the repo root — this file focuses on the migration mechanics.
+
 ## How to apply
 
 Open Supabase → **SQL Editor**, paste **`ALL_MIGRATIONS.sql`** (this folder), and
-click **Run**. It contains, in order:
+click **Run**. It contains, in order, all 11 migrations:
 
 | File | Contents |
 |---|---|
@@ -16,6 +20,13 @@ click **Run**. It contains, in order:
 | `migrations/002_rls.sql` | Row Level Security policies |
 | `migrations/003_storage.sql` | Storage buckets (`product-images`, `avatars`) + policies |
 | `migrations/004_seed.sql` | Seed data generated from the live catalog (safe to re-run) |
+| `migrations/005_admin.sql` | Admin role support (`profiles.role`, `is_admin()`) |
+| `migrations/006_security_hardening.sql` | RLS/policy hardening pass |
+| `migrations/007_stripe_payments.sql` | Orders/order_items, Stripe fields, idempotent stock-decrement triggers |
+| `migrations/008_paid_at.sql` | `orders.paid_at` timestamp |
+| `migrations/009_newsletter_signups.sql` | Newsletter signup table |
+| `migrations/010_rate_limiting.sql` | Shared `rate_limit_counters` table + `check_rate_limit()` |
+| `migrations/011_coupons.sql` | Coupon fields on orders + idempotent usage-count triggers |
 
 ## ERD (entity relationships)
 
@@ -87,14 +98,22 @@ dashboard) and update `product_images.url` to the public URLs
   and swaps to live data when Supabase responds — zero visual change, and the
   site keeps working even if the database is unreachable.
 - RLS does the filtering: the anon key can only ever see active products.
-- The cart stays in `localStorage` for now — the site has no login UI yet, and
-  the `cart_items` table is ready for when accounts are added.
+- The cart is intentionally `localStorage`-only, even though full
+  authentication now exists — it keeps shopping login-free and checkout
+  fast with no extra round-trips. The `cart_items` table exists in the
+  schema (unused) for a future cross-device cart; see
+  [`docs/roadmap.md`](../docs/roadmap.md).
 
 ## Scalability suggestions (future)
 
-1. **Checkout:** run order creation in a Supabase Edge Function (validate
-   stock, apply coupon, compute totals server-side; integrate Stripe and flip
-   `payment_status` from a webhook). Never trust client-side totals.
+Checkout, coupons, and Stripe integration described in earlier drafts of
+this file are now fully implemented — see
+[`docs/checkout-flow.md`](../docs/checkout-flow.md),
+[`docs/stripe-flow.md`](../docs/stripe-flow.md), and
+[`docs/coupon-flow.md`](../docs/coupon-flow.md). Remaining ideas:
+
+1. **Reviews:** the `reviews` table + RLS policies already exist; nothing in
+   the UI reads or writes them yet.
 2. **Search:** add `pg_trgm` + a GIN index on `products.name` for fuzzy search
    once the catalog grows past a few hundred items; paginate with
    `range()` instead of loading the full catalog.
