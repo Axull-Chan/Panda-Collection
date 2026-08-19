@@ -201,28 +201,28 @@ Percentage and fixed-amount coupons with expiry, usage limits, and minimum-order
 
 ## Screenshots
 
-> Screenshots coming soon — placeholders below for each core flow. See [`docs/screenshots/`](./docs/screenshots) for the folder these are intended to live in.
+Captured from the live deployment at [panda-collection.vercel.app](https://panda-collection.vercel.app).
 
 <table>
 <tr>
-<td align="center" width="33%"><em>Homepage</em><br/><sub>docs/screenshots/homepage.png</sub></td>
-<td align="center" width="33%"><em>Collections</em><br/><sub>docs/screenshots/collections.png</sub></td>
-<td align="center" width="33%"><em>Product Page</em><br/><sub>docs/screenshots/product-page.png</sub></td>
+<td align="center" width="33%"><em>Homepage</em><br/><a href="./docs/screenshots/homepage.png"><img src="./docs/screenshots/homepage.png" width="400"/></a></td>
+<td align="center" width="33%"><em>Collections</em><br/><a href="./docs/screenshots/collections.png"><img src="./docs/screenshots/collections.png" width="400"/></a></td>
+<td align="center" width="33%"><em>Product Page</em><br/><a href="./docs/screenshots/product-page.png"><img src="./docs/screenshots/product-page.png" width="400"/></a></td>
 </tr>
 <tr>
-<td align="center"><em>Cart</em><br/><sub>docs/screenshots/cart.png</sub></td>
-<td align="center"><em>Checkout</em><br/><sub>docs/screenshots/checkout.png</sub></td>
-<td align="center"><em>Wishlist</em><br/><sub>docs/screenshots/wishlist.png</sub></td>
+<td align="center"><em>Cart</em><br/><a href="./docs/screenshots/cart.png"><img src="./docs/screenshots/cart.png" width="400"/></a></td>
+<td align="center"><em>Checkout</em><br/><a href="./docs/screenshots/checkout.png"><img src="./docs/screenshots/checkout.png" width="400"/></a></td>
+<td align="center"><em>Wishlist</em><br/><a href="./docs/screenshots/wishlist.png"><img src="./docs/screenshots/wishlist.png" width="400"/></a></td>
 </tr>
 <tr>
-<td align="center"><em>Profile</em><br/><sub>docs/screenshots/profile.png</sub></td>
-<td align="center"><em>Orders</em><br/><sub>docs/screenshots/orders.png</sub></td>
-<td align="center"><em>Admin Dashboard</em><br/><sub>docs/screenshots/admin-dashboard.png</sub></td>
+<td align="center"><em>Profile</em><br/><a href="./docs/screenshots/profile.png"><img src="./docs/screenshots/profile.png" width="400"/></a></td>
+<td align="center"><em>Orders</em><br/><a href="./docs/screenshots/orders.png"><img src="./docs/screenshots/orders.png" width="400"/></a></td>
+<td align="center"><em>Admin Dashboard</em><br/><a href="./docs/screenshots/admin-dashboard.png"><img src="./docs/screenshots/admin-dashboard.png" width="400"/></a></td>
 </tr>
 <tr>
-<td align="center"><em>Product Management</em><br/><sub>docs/screenshots/admin-products.png</sub></td>
-<td align="center"><em>Coupons</em><br/><sub>docs/screenshots/admin-coupons.png</sub></td>
-<td align="center"><em>Mobile Layout</em><br/><sub>docs/screenshots/mobile.png</sub></td>
+<td align="center"><em>Product Management</em><br/><a href="./docs/screenshots/admin-products.png"><img src="./docs/screenshots/admin-products.png" width="400"/></a></td>
+<td align="center"><em>Coupons</em><br/><a href="./docs/screenshots/admin-coupons.png"><img src="./docs/screenshots/admin-coupons.png" width="400"/></a></td>
+<td align="center"><em>Mobile Layout</em><br/><a href="./docs/screenshots/mobile.png"><img src="./docs/screenshots/mobile.png" width="160"/></a></td>
 </tr>
 </table>
 
