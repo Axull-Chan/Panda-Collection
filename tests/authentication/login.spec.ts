@@ -1,5 +1,4 @@
 import { test, expect } from "@playwright/test";
-import { customerStorageState } from "../helpers/auth";
 import { testEnv } from "../fixtures/env";
 
 test.describe("sign in form", () => {
@@ -41,17 +40,26 @@ test.describe("sign in form", () => {
 });
 
 test.describe("signed-in session", () => {
-  test.use({ storageState: customerStorageState });
+  // Deliberately not customerStorageState: these tests sign a session out
+  // (or corrupt it) as their whole point, and customerStorageState is the
+  // single shared session every other spec file's test.use() also loads —
+  // ending it here would silently break every test that runs afterward in
+  // the same suite run. Each test signs in fresh instead, so it only ever
+  // affects a session of its own.
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/account/sign-in");
+    await page.getByLabel("Email", { exact: true }).fill(testEnv.customerEmail);
+    await page.getByLabel("Password", { exact: true }).fill(testEnv.customerPassword);
+    await page.getByRole("button", { name: /sign in/i }).click();
+    await expect(page.getByRole("heading", { name: /welcome back/i })).toBeVisible();
+  });
 
   test("survives a reload", async ({ page }) => {
-    await page.goto("/account");
-    await expect(page.getByRole("heading", { name: /welcome back/i })).toBeVisible();
     await page.reload();
     await expect(page.getByRole("heading", { name: /welcome back/i })).toBeVisible();
   });
 
   test("signs out and blocks further access to the account", async ({ page }) => {
-    await page.goto("/account");
     await page.getByRole("button", { name: "Sign Out" }).click();
     await expect(page).toHaveURL(/\/$/);
     await expect(page.getByRole("link", { name: "Sign In" })).toBeVisible();
@@ -61,9 +69,6 @@ test.describe("signed-in session", () => {
   });
 
   test("a tampered session is treated as signed out, not left in a broken state", async ({ page }) => {
-    await page.goto("/account");
-    await expect(page.getByRole("heading", { name: /welcome back/i })).toBeVisible();
-
     await page.evaluate(() => {
       const key = Object.keys(localStorage).find(
         (k) => k.startsWith("sb-") && k.endsWith("-auth-token")
