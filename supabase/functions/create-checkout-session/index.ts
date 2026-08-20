@@ -234,12 +234,17 @@ Deno.serve(async (req) => {
     // ignorance of our max_discount cap) drift from what we actually
     // decided to charge. This keeps our validation the single source of
     // truth; Stripe just applies the number.
-    // IDR is a zero-decimal currency in Stripe — unit_amount is the whole
-    // Rupiah amount itself, not cents. Never multiply by 100 here.
+    // Despite having no real fractional subunit in everyday use, IDR is
+    // NOT a zero-decimal currency in Stripe's API — confirmed live: sending
+    // the raw Rupiah value as unit_amount made Stripe read Rp 49.250 as
+    // Rp 492.50 (its own error message showed the decimal point), which
+    // then fell under Stripe's minimum-charge threshold. unit_amount is in
+    // the smallest unit the same as any 2-decimal currency, so it must be
+    // multiplied by 100 here.
     let discounts: Stripe.Checkout.SessionCreateParams.Discount[] | undefined;
     if (discount > 0) {
       const stripeCoupon = await stripe.coupons.create({
-        amount_off: Math.round(discount),
+        amount_off: Math.round(discount) * 100,
         currency: "idr",
         duration: "once",
         name: couponFields ? `Coupon ${couponFields.coupon_code}` : "Discount",
@@ -255,7 +260,7 @@ Deno.serve(async (req) => {
         quantity: r.quantity,
         price_data: {
           currency: "idr",
-          unit_amount: Math.round(r.unitPrice),
+          unit_amount: Math.round(r.unitPrice) * 100,
           product_data: {
             name: r.productName,
             description: r.variantLabel,

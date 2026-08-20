@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useCart } from "../context/CartContext";
-import { fetchOrderBySessionId, orderNumber, type OrderRecord } from "../lib/orders";
+import { fetchOrderById, fetchOrderBySessionId, orderNumber, type OrderRecord } from "../lib/orders";
 import { OrderBlock } from "./OrdersPage";
 import { Reveal } from "../components/Reveal";
 import { pageVariants } from "../lib/motionVariants";
@@ -11,15 +11,19 @@ const POLL_INTERVAL_MS = 1200;
 const MAX_POLLS = 8; // ~10 seconds
 
 /**
- * Landing page after a successful Stripe Checkout redirect. Arrival here
- * means Stripe already confirmed payment client-side, so the cart clears
- * immediately; the order itself is written by the signature-verified
- * webhook, which is usually near-instant but is polled for briefly in case
- * it hasn't landed yet by the time the browser gets here.
+ * Landing page after a successful payment redirect — Stripe or Midtrans.
+ * Stripe returns `session_id` (looked up via stripe_session_id); Midtrans's
+ * finish redirect carries `order_id`, which is this table's id directly
+ * (see create-midtrans-transaction). Arrival here means the gateway already
+ * confirmed payment client-side, so the cart clears immediately; the order
+ * itself is written by the signature-verified webhook, which is usually
+ * near-instant but is polled for briefly in case it hasn't landed yet by
+ * the time the browser gets here.
  */
 export function CheckoutSuccessPage() {
   const [params] = useSearchParams();
   const sessionId = params.get("session_id");
+  const orderId = params.get("order_id");
   const { clearCart } = useCart();
   const clearedRef = useRef(false);
 
@@ -34,12 +38,12 @@ export function CheckoutSuccessPage() {
   }, [clearCart]);
 
   useEffect(() => {
-    if (!sessionId) return;
+    if (!sessionId && !orderId) return;
     let cancelled = false;
     let attempts = 0;
 
     const poll = async () => {
-      const found = await fetchOrderBySessionId(sessionId);
+      const found = sessionId ? await fetchOrderBySessionId(sessionId) : await fetchOrderById(orderId!);
       if (cancelled) return;
       if (found && found.payment_status === "paid") {
         setOrder(found);
@@ -57,9 +61,9 @@ export function CheckoutSuccessPage() {
     return () => {
       cancelled = true;
     };
-  }, [sessionId]);
+  }, [sessionId, orderId]);
 
-  if (!sessionId) {
+  if (!sessionId && !orderId) {
     return (
       <motion.div
         initial="initial"

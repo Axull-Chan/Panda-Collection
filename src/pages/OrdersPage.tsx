@@ -29,7 +29,10 @@ export function OrderBlock({ order }: { order: OrderRecord }) {
           <p className="label mt-1.5 text-muted">{formatOrderDate(order.created_at)}</p>
         </div>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5">
-          <span className="label text-muted">{formatStatus(order.status)}</span>
+          <span className="label text-muted">
+            {order.payment_provider === "midtrans" ? "Midtrans" : "Stripe"}
+          </span>
+          <span className="label text-muted">· {formatStatus(order.status)}</span>
           <span className="label text-muted">· {formatStatus(order.payment_status)}</span>
           <span className="label text-muted">· {formatStatus(order.shipping_status)}</span>
           <span className="label sm:ml-3">{formatIDR(order.total)}</span>

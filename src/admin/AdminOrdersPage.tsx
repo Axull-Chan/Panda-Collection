@@ -130,7 +130,10 @@ export function AdminOrdersPage() {
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-5 gap-y-1">
-                    <span className="label text-muted">{formatStatus(o.status)}</span>
+                    <span className="label text-muted">
+                      {o.payment_provider === "midtrans" ? "Midtrans" : "Stripe"}
+                    </span>
+                    <span className="label text-muted">· {formatStatus(o.status)}</span>
                     <span className="label text-muted">· {formatStatus(o.payment_status)}</span>
                     <span className="label text-muted">· {formatStatus(o.shipping_status)}</span>
                     <span className="label sm:ml-2">{formatIDR(o.total)}</span>
@@ -148,9 +151,20 @@ export function AdminOrdersPage() {
                         </p>
                       </div>
                       <div className="min-w-0">
-                        <p className="label text-muted">Stripe Session</p>
-                        <p className="label mt-1.5 truncate" title={o.stripe_session_id ?? undefined}>
-                          {o.stripe_session_id ?? "—"}
+                        <p className="label text-muted">
+                          {o.payment_provider === "midtrans" ? "Midtrans Transaction" : "Stripe Session"}
+                        </p>
+                        <p
+                          className="label mt-1.5 truncate"
+                          title={
+                            (o.payment_provider === "midtrans"
+                              ? o.midtrans_transaction_id
+                              : o.stripe_session_id) ?? undefined
+                          }
+                        >
+                          {(o.payment_provider === "midtrans"
+                            ? o.midtrans_transaction_id
+                            : o.stripe_session_id) ?? "—"}
                         </p>
                       </div>
                       <div>

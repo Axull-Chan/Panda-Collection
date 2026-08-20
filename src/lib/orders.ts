@@ -26,6 +26,7 @@ export interface OrderRecord {
   status: string;
   payment_status: string;
   shipping_status: string;
+  payment_provider: string;
   subtotal: number;
   discount: number;
   total: number;
@@ -36,7 +37,7 @@ export interface OrderRecord {
 }
 
 const ORDER_SELECT =
-  "id,created_at,status,payment_status,shipping_status,subtotal,discount,total," +
+  "id,created_at,status,payment_status,shipping_status,payment_provider,subtotal,discount,total," +
   "coupon_code,discount_type,discount_value," +
   "order_items(id,product_name,variant_label,quantity,unit_price," +
   "products(slug,product_images(url,is_primary)))";
@@ -62,6 +63,25 @@ export async function fetchOrderBySessionId(sessionId: string): Promise<OrderRec
     .maybeSingle();
   if (error) {
     console.warn("[orders] session lookup failed:", error.message);
+    return null;
+  }
+  return (data as unknown as OrderRecord) ?? null;
+}
+
+/**
+ * Looks up an order directly by its own id — used on the Midtrans return
+ * flow, where Midtrans's own order_id (passed back as a query param on the
+ * finish redirect) is this table's id directly, unlike Stripe's separate
+ * session_id.
+ */
+export async function fetchOrderById(orderId: string): Promise<OrderRecord | null> {
+  const { data, error } = await supabase
+    .from("orders")
+    .select(ORDER_SELECT)
+    .eq("id", orderId)
+    .maybeSingle();
+  if (error) {
+    console.warn("[orders] id lookup failed:", error.message);
     return null;
   }
   return (data as unknown as OrderRecord) ?? null;

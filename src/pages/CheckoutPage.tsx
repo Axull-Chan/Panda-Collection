@@ -19,6 +19,22 @@ interface AppliedCoupon {
   discountAmount: number;
 }
 
+type PaymentMethod = "midtrans" | "stripe";
+
+const PAYMENT_METHODS: { id: PaymentMethod; label: string; disclaimer: string }[] = [
+  {
+    id: "midtrans",
+    label: "Bank Transfer / E-Wallet / QRIS",
+    disclaimer:
+      "You'll complete payment securely via Midtrans — bank transfer, GoPay, OVO, DANA, or QRIS.",
+  },
+  {
+    id: "stripe",
+    label: "Card",
+    disclaimer: "You'll complete payment securely via Stripe.",
+  },
+];
+
 export function CheckoutPage() {
   const { profile, updateProfile } = useAuth();
   const { lines, subtotal } = useCart();
@@ -31,6 +47,7 @@ export function CheckoutPage() {
   const [postal, setPostal] = useState("");
   const [country, setCountry] = useState("");
   const [saveAddress, setSaveAddress] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("midtrans");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -127,11 +144,14 @@ export function CheckoutPage() {
 
     if (saveAddress) await updateProfile({ address });
 
-    // The Edge Function re-validates prices and stock server-side, creates
-    // the order as a draft, and starts a Stripe Checkout Session. Nothing
-    // is charged and no order is marked paid until Stripe's own
-    // signature-verified webhook confirms payment.
-    const { data, error: fnError } = await supabase.functions.invoke("create-checkout-session", {
+    // Both functions re-validate prices and stock server-side, create the
+    // order as a draft, and start a hosted payment session — nothing is
+    // charged and no order is marked paid until the gateway's own
+    // signature-verified webhook confirms payment. Both return the same
+    // { url } shape, so only which function gets called differs by method.
+    const functionName =
+      paymentMethod === "midtrans" ? "create-midtrans-transaction" : "create-checkout-session";
+    const { data, error: fnError } = await supabase.functions.invoke(functionName, {
       body: {
         lines,
         address,
@@ -158,8 +178,8 @@ export function CheckoutPage() {
       return;
     }
 
-    // Full navigation to Stripe's hosted page — the cart is preserved and
-    // only cleared once we land back on the success page.
+    // Full navigation to the gateway's hosted page — the cart is preserved
+    // and only cleared once we land back on the success page.
     window.location.href = data.url as string;
   };
 
@@ -266,13 +286,36 @@ export function CheckoutPage() {
               checked={saveAddress}
               onChange={setSaveAddress}
             />
+
+            <div>
+              <p className="label">Payment Method</p>
+              <div className="mt-4 flex flex-wrap gap-3">
+                {PAYMENT_METHODS.map((method) => (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => setPaymentMethod(method.id)}
+                    aria-pressed={paymentMethod === method.id}
+                    disabled={busy}
+                    className={`label h-12 border px-4 transition-colors duration-300 disabled:pointer-events-none disabled:opacity-50 ${
+                      paymentMethod === method.id
+                        ? "border-ink bg-ink text-bg"
+                        : "border-line text-ink hover:border-ink"
+                    }`}
+                  >
+                    {method.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <AuthError message={error} />
             <AuthSubmit busy={busy}>
               {busy ? "Redirecting to Payment" : "Continue to Payment"}
             </AuthSubmit>
             <p className="text-xs leading-relaxed text-muted">
-              You'll complete payment securely via Stripe. Each piece is made
-              to keep — complimentary repairs for the life of the garment.
+              {PAYMENT_METHODS.find((m) => m.id === paymentMethod)?.disclaimer} Each
+              piece is made to keep — complimentary repairs for the life of the garment.
             </p>
           </form>
         </Reveal>

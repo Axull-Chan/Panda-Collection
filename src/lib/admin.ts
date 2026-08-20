@@ -63,7 +63,9 @@ export interface AdminOrder {
   discount_value: number | null;
   created_at: string;
   paid_at: string | null;
+  payment_provider: string;
   stripe_session_id: string | null;
+  midtrans_transaction_id: string | null;
   order_items: {
     id: string;
     product_name: string;
@@ -347,7 +349,7 @@ export async function fetchAdminOrders(): Promise<AdminOrder[]> {
     .select(
       "id,user_id,email,status,payment_status,shipping_status,subtotal,discount,total," +
         "coupon_code,discount_type,discount_value,created_at," +
-        "paid_at,stripe_session_id," +
+        "paid_at,payment_provider,stripe_session_id,midtrans_transaction_id," +
         "order_items(id,product_name,variant_label,quantity,unit_price)"
     )
     .order("created_at", { ascending: false });
