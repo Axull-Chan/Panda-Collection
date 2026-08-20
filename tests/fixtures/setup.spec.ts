@@ -20,7 +20,7 @@ test.describe("customer session", () => {
 
   test("is denied the admin area", async ({ page }) => {
     await page.goto("/admin");
-    await expect(page.getByRole("heading", { name: /the atelier is closed/i })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /this area is private/i })).toBeVisible();
   });
 });
 
@@ -34,7 +34,7 @@ test.describe("admin session", () => {
 
   test("reaches the admin dashboard", async ({ page }) => {
     await page.goto("/admin");
-    await expect(page.getByRole("heading", { name: /the atelier is closed/i })).not.toBeVisible();
+    await expect(page.getByRole("heading", { name: /this area is private/i })).not.toBeVisible();
     await expect(page).toHaveURL(/\/admin$/);
   });
 });

@@ -57,8 +57,8 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 // "Remember me": Supabase persists sessions in localStorage. When the user
 // opts out we mark the session as ephemeral and end it on the next visit
 // that isn't part of the same browser tab.
-const EPHEMERAL_KEY = "anita-session-ephemeral";
-const TAB_KEY = "anita-session-tab";
+const EPHEMERAL_KEY = "acd-session-ephemeral";
+const TAB_KEY = "acd-session-tab";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);

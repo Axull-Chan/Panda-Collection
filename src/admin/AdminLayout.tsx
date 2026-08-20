@@ -194,9 +194,9 @@ export function AdminLayout() {
               <Menu size={18} strokeWidth={1.5} />
             </button>
             <Link to="/admin" className="font-serif text-xl tracking-[0.16em]">
-              ANITA
+              ACD
             </Link>
-            <span className="label mt-0.5 text-muted">Atelier Admin</span>
+            <span className="label mt-0.5 text-muted">Admin</span>
           </div>
           <div className="hidden flex-1 justify-center md:flex">
             <GlobalSearch />
@@ -223,7 +223,7 @@ export function AdminLayout() {
             className="fixed inset-0 z-50 bg-bg lg:hidden"
           >
             <div className="flex h-16 items-center justify-between px-6">
-              <span className="font-serif text-xl tracking-[0.16em]">ANITA</span>
+              <span className="font-serif text-xl tracking-[0.16em]">ACD</span>
               <button
                 type="button"
                 aria-label="Close admin menu"
@@ -234,7 +234,7 @@ export function AdminLayout() {
               </button>
             </div>
             <nav className="px-6 pt-10">
-              <p className="label mb-6 text-muted">Atelier Admin</p>
+              <p className="label mb-6 text-muted">Admin</p>
               {navLinks}
             </nav>
           </motion.div>

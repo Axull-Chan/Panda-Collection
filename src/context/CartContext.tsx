@@ -9,7 +9,7 @@ import {
 import type { CartLine } from "../types";
 import { useProducts } from "./ProductsContext";
 
-const STORAGE_KEY = "anita-cart";
+const STORAGE_KEY = "acd-cart";
 
 function loadLines(): CartLine[] {
   try {

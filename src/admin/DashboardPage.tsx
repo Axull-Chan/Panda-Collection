@@ -37,7 +37,7 @@ export function DashboardPage() {
 
   return (
     <div>
-      <PageTitle eyebrow="Atelier Admin" title="Dashboard" />
+      <PageTitle eyebrow="Admin" title="Dashboard" />
 
       {error && (
         <p role="alert" className="mt-6 text-sm text-[#9c4a33]">

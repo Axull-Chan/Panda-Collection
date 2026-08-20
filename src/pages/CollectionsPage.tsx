@@ -71,13 +71,12 @@ export function CollectionsPage() {
       className="mx-auto max-w-[1400px] px-6 pt-28 md:px-12 md:pt-36 lg:pt-48"
     >
       <Reveal>
-        <p className="label text-muted">Edition No. 01 — Autumn 2026</p>
+        <p className="label text-muted">Curated Collection</p>
         <h1 className="mt-4 font-serif text-5xl leading-[1.02] sm:mt-6 md:text-6xl lg:text-8xl">
           Collections
         </h1>
         <p className="mt-4 max-w-[420px] text-sm leading-relaxed text-muted sm:mt-6">
-          Twenty garments, each in a numbered edition of twenty. When an edition
-          closes, the pattern is retired.
+          Real pieces, real stock — browse the full collection.
         </p>
       </Reveal>
 

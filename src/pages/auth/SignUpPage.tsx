@@ -61,11 +61,11 @@ export function SignUpPage() {
     <AuthLayout
       eyebrow="Account"
       title="Create Account"
-      intro="Join the house — editions access, order history, and a wishlist of your own."
+      intro="Create an account for order history, a saved wishlist, and faster checkout."
       image={{
         src: "/images/boucle-suit.jpg",
-        alt: "Bouclé skirt suit from Edition No. 01",
-        caption: "Edition No. 01 — Bouclé Skirt Suit",
+        alt: "Bouclé skirt suit",
+        caption: "Bouclé Skirt Suit",
       }}
     >
       <form onSubmit={onSubmit} className="space-y-8" noValidate>

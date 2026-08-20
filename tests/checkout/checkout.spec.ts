@@ -77,7 +77,7 @@ test.describe("checkout page", () => {
     const token = await getAuthToken(page);
     const urls = await page.evaluate(
       async ({ supabaseUrl, anonKey, token, address, origin }) => {
-        const cartRaw = localStorage.getItem("anita-cart");
+        const cartRaw = localStorage.getItem("acd-cart");
         const lines = cartRaw ? JSON.parse(cartRaw) : [];
 
         const callOnce = async () => {

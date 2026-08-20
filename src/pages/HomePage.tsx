@@ -94,7 +94,7 @@ export function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: EASE, delay: 0.2 }}
           >
-            Edition No. 01 — Autumn 2026
+            Curated Collection
           </motion.p>
           <motion.h1
             className="mt-4 max-w-[900px] font-serif text-5xl leading-[1.02] sm:mt-6 md:text-6xl lg:text-8xl"
@@ -102,7 +102,7 @@ export function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.9, ease: EASE, delay: 0.35 }}
           >
-            Panda Collection
+            ACD Fashion
           </motion.h1>
           <motion.p
             className="mt-4 max-w-[420px] text-sm leading-relaxed text-muted sm:mt-6"
@@ -110,8 +110,8 @@ export function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: EASE, delay: 0.5 }}
           >
-            Twenty garments, handcrafted in numbered editions. Each piece designed
-            as an architectural pause.
+            A curated edit of everyday fashion — real pieces, real stock, no
+            gimmicks.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -159,17 +159,15 @@ export function HomePage() {
       <section className="mx-auto max-w-[1400px] px-6 pt-16 md:px-12 md:pt-24 lg:pt-48">
         <div className="grid grid-cols-1 items-end gap-x-8 gap-y-8 sm:gap-y-12 lg:grid-cols-12">
           <Reveal className="lg:col-span-4">
-            <p className="label text-muted">02 — Atelier</p>
+            <p className="label text-muted">02 — Our Promise</p>
             <h2 className="mt-4 font-serif text-4xl leading-[1.05] sm:mt-6 md:text-5xl lg:text-6xl">
-              Made once,
+              Quality you can
               <br />
-              kept forever.
+              count on.
             </h2>
             <p className="mt-6 max-w-[360px] text-sm leading-relaxed text-muted sm:mt-8">
-              Every ANITA garment is released as a numbered edition of twenty.
-              When the edition closes, the pattern is retired. What remains is a
-              wardrobe built the way a collection is built — slowly, and with
-              intent.
+              Every piece is chosen carefully and priced fairly. What you see
+              in the photos is exactly what arrives at your door.
             </p>
             <Link to="/about" className="label link-underline mt-8 inline-block sm:mt-10">
               Read our story
@@ -178,7 +176,7 @@ export function HomePage() {
           <Reveal delay={0.1} className="lg:col-span-7 lg:col-start-6">
             <Image
               src="/images/houndstooth.jpg"
-              alt="Houndstooth tailoring from Edition No. 01, seated in the atelier"
+              alt="Houndstooth tailoring, studio shot"
               aspectRatio="4/5"
             />
           </Reveal>
@@ -197,7 +195,6 @@ export function HomePage() {
               "A garment should be the calmest thing in the room — and the most
               certain."
             </blockquote>
-            <p className="label mt-6 text-muted sm:mt-8">Anita V. — Founder</p>
           </Reveal>
         </div>
       </section>

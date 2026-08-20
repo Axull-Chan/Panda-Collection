@@ -147,7 +147,7 @@ export function Nav() {
             to="/"
             className="justify-self-start font-serif text-xl tracking-[0.16em] lg:text-[26px] lg:tracking-[0.22em]"
           >
-            ANITA
+            ACD
           </Link>
 
           <nav aria-label="Primary" className="hidden lg:block">
@@ -205,7 +205,7 @@ export function Nav() {
             className="fixed inset-0 z-50 overflow-y-auto bg-bg text-ink lg:hidden"
           >
             <div className="flex h-16 items-center justify-between px-6">
-              <span className="font-serif text-xl tracking-[0.16em]">ANITA</span>
+              <span className="font-serif text-xl tracking-[0.16em]">ACD</span>
               <button
                 type="button"
                 aria-label="Close menu"
@@ -255,7 +255,7 @@ export function Nav() {
               </motion.div>
 
               <p className="label mt-12 pb-10 text-muted sm:mt-16">
-                Numbered editions — est. 2026
+                Curated women's fashion
               </p>
             </nav>
           </motion.div>

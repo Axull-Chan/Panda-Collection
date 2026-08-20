@@ -208,7 +208,7 @@ export function AccountPage() {
           {!orders || orders.length === 0 ? (
             <EmptyState
               icon={<Package size={16} strokeWidth={1.5} />}
-              text="No orders yet. Your numbered editions will be listed here."
+              text="No orders yet. Your orders will be listed here."
               linkText="Explore Collection"
               linkTo="/collections"
             />

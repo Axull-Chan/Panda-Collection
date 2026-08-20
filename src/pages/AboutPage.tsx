@@ -7,16 +7,16 @@ import { pageVariants } from "../lib/motionVariants";
 
 const PRINCIPLES = [
   {
-    title: "Editions, not seasons",
-    body: "Twenty pieces per garment, numbered by hand. When an edition closes, the pattern is retired for good.",
+    title: "Handpicked, Not Mass-Produced",
+    body: "Every piece is chosen because we'd wear it ourselves — not pulled from a catalogue to fill a rack.",
   },
   {
-    title: "One atelier",
-    body: "Every piece is cut, sewn, and finished in our Lisbon studio. Nothing is outsourced; nothing is anonymous.",
+    title: "Based in Indonesia",
+    body: "A real, small business — not a faceless storefront. Reach out any time, we're happy to help.",
   },
   {
-    title: "Cloth first",
-    body: "Design begins at the mill. We choose the fabric before the silhouette, and let its weight decide the line.",
+    title: "Real Photos, No Surprises",
+    body: "What's photographed is what's in stock. No stock photos standing in for the actual item.",
   },
 ];
 
@@ -31,9 +31,9 @@ export function AboutPage() {
     >
       <div className="mx-auto max-w-[1400px] px-6 md:px-12">
         <Reveal>
-          <p className="label text-muted">The Atelier</p>
+          <p className="label text-muted">About Us</p>
           <h1 className="mt-4 max-w-[1000px] font-serif text-4xl leading-[1.05] sm:mt-6 md:text-5xl lg:text-7xl">
-            A clothing house that works like a gallery.
+            Fashion, chosen with care.
           </h1>
         </Reveal>
 
@@ -41,21 +41,20 @@ export function AboutPage() {
           <Reveal className="lg:col-span-7">
             <Image
               src="/images/wool-suit.jpg"
-              alt="The relaxed wool suit from Edition No. 01, photographed in the studio"
+              alt="A relaxed wool suit, photographed in the studio"
               aspectRatio="4/3"
               objectPosition="top"
             />
           </Reveal>
           <Reveal delay={0.1} className="lg:col-span-4 lg:col-start-9 lg:self-end">
             <p className="text-sm leading-relaxed text-muted">
-              ANITA was founded on a simple refusal: no seasons, no restocks, no
-              noise. Each garment is drawn once, made twenty times, and numbered
-              like a print. The result is a wardrobe of certainties — pieces
-              designed to be the calmest thing in the room.
+              ACD Fashion is a small, Indonesia-based fashion business. We pick
+              every piece ourselves, photograph it honestly, and keep pricing
+              straightforward — no seasonal markups, no bait-and-switch.
             </p>
             <p className="mt-6 text-sm leading-relaxed text-muted">
-              The studio sits above a paper shop in Lisbon. Morning light, chalk
-              lines, shears — the tools have not changed. Only the patience has.
+              We're still growing, and we treat every order like it matters —
+              because to us, it does.
             </p>
           </Reveal>
         </div>
@@ -78,17 +77,16 @@ export function AboutPage() {
         <div className="mt-16 grid grid-cols-1 items-center gap-x-8 gap-y-8 sm:mt-32 sm:gap-y-12 lg:mt-48 lg:grid-cols-12">
           <Reveal className="lg:col-span-5">
             <blockquote className="font-serif text-3xl italic leading-[1.15] md:text-4xl lg:text-5xl">
-              "We don't make collections. We make decisions — twenty at a time."
+              "We only sell what we'd be happy to wear ourselves."
             </blockquote>
-            <p className="label mt-6 text-muted sm:mt-8">Anita V. — Founder</p>
             <Link to="/collections" className="label link-underline mt-8 inline-block sm:mt-12">
-              Explore the current edition
+              Explore the collection
             </Link>
           </Reveal>
           <Reveal delay={0.1} className="lg:col-span-6 lg:col-start-7">
             <Image
               src="/images/leather-corset.jpg"
-              alt="The leather corset dress pinned on the atelier dress form"
+              alt="The leather corset dress, studio shot"
               aspectRatio="4/5"
             />
           </Reveal>

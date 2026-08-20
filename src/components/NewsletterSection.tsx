@@ -34,8 +34,8 @@ export function NewsletterSection() {
             Stay Inspired
           </h2>
           <p className="mx-auto mt-4 max-w-[420px] text-sm leading-relaxed text-muted sm:mt-6">
-            Editions announcements, studio notes, and essays on dressing well —
-            a few times a season, never more.
+            New arrivals, styling tips, and the occasional discount — a few
+            times a month, never more.
           </p>
         </Reveal>
 

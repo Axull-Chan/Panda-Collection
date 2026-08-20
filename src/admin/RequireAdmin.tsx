@@ -16,11 +16,11 @@ function AccessDenied() {
       <div className="max-w-[480px] text-center">
         <p className="label text-muted">Private</p>
         <h1 className="mt-4 font-serif text-5xl leading-[1.05] sm:text-6xl">
-          The atelier is closed.
+          This area is private.
         </h1>
         <p className="mx-auto mt-6 max-w-[360px] text-sm leading-relaxed text-muted">
-          This area is reserved for the house. If you believe you should have
-          access, ask an administrator to invite you.
+          This area is reserved for administrators. If you believe you should
+          have access, ask an administrator to invite you.
         </p>
         <Link
           to="/"

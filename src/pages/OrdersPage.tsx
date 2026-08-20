@@ -140,7 +140,7 @@ export function OrdersPage() {
             <div className="flex items-center gap-4 text-muted">
               <Package size={16} strokeWidth={1.5} />
               <p className="text-sm leading-relaxed">
-                No orders yet. Your numbered editions will be listed here.
+                No orders yet. Your orders will be listed here.
               </p>
             </div>
             <Link to="/collections" className="label link-underline shrink-0">

@@ -33,11 +33,11 @@ export function SignInPage() {
     <AuthLayout
       eyebrow="Account"
       title="Sign In"
-      intro="Access your orders, wishlist, and editions."
+      intro="Access your orders and wishlist."
       image={{
         src: "/images/check-trouser.jpg",
-        alt: "Pleated check trousers from Edition No. 01",
-        caption: "Edition No. 01 — Pleated Check Trouser",
+        alt: "Pleated check trousers",
+        caption: "Pleated Check Trouser",
       }}
     >
       <form onSubmit={onSubmit} className="space-y-8" noValidate>

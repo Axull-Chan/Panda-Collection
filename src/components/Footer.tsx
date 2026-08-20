@@ -40,10 +40,10 @@ export function Footer() {
         <div className="grid grid-cols-2 gap-x-6 gap-y-12 lg:gap-x-8 lg:gap-y-14 lg:grid-cols-12">
           <div className="col-span-2 lg:col-span-3">
             <p className="font-serif text-xl tracking-[0.16em] lg:text-[26px] lg:tracking-[0.22em]">
-              ANITA
+              ACD Fashion
             </p>
             <p className="mt-4 max-w-[240px] text-sm leading-relaxed text-muted">
-              Garments in numbered editions. Designed slowly, made once.
+              Curated fashion pieces, thoughtfully selected.
             </p>
           </div>
 
@@ -77,12 +77,11 @@ export function Footer() {
             <p className="label text-muted">Contact</p>
             <ul className="mt-5 space-y-3 text-sm text-muted">
               <li>
-                <a href="mailto:atelier@anita.example" className="link-underline text-ink">
-                  atelier@anita.example
+                <a href="mailto:hello@acdfashion.example" className="link-underline text-ink">
+                  hello@acdfashion.example
                 </a>
               </li>
-              <li>Rua da Rosa 114</li>
-              <li>1200-385 Lisboa</li>
+              <li>Indonesia</li>
             </ul>
           </div>
 
@@ -127,8 +126,8 @@ export function Footer() {
         </div>
 
         <div className="mt-16 flex flex-col gap-3 border-t border-line pt-8 lg:mt-20 lg:flex-row lg:items-center lg:justify-between">
-          <p className="label text-muted">© 2026 Anita Atelier. All rights reserved.</p>
-          <p className="label text-muted">Numbered editions — made once, kept forever</p>
+          <p className="label text-muted">© 2026 ACD Fashion. All rights reserved.</p>
+          <p className="label text-muted">Real photos. Real stock. No surprises.</p>
         </div>
       </div>
     </footer>

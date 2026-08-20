@@ -203,7 +203,7 @@ export function ProductEditorPage() {
   const [price, setPrice] = useState("");
   const [salePrice, setSalePrice] = useState("");
   const [sku, setSku] = useState("");
-  const [brand, setBrand] = useState("ANITA");
+  const [brand, setBrand] = useState("ACD Fashion");
   const [badge, setBadge] = useState("");
   const [editionSize, setEditionSize] = useState("20");
   const [releaseIndex, setReleaseIndex] = useState("");
@@ -286,7 +286,7 @@ export function ProductEditorPage() {
         price: Number(price),
         sale_price: salePrice.trim() ? Number(salePrice) : null,
         sku: sku.trim() || null,
-        brand: brand.trim() || "ANITA",
+        brand: brand.trim() || "ACD Fashion",
         badge: badge.trim() || null,
         edition_size: Number(editionSize) || 20,
         release_index: releaseIndex.trim() ? Number(releaseIndex) : null,

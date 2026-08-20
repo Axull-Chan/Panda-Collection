@@ -6,7 +6,7 @@ Stripe's hosted Checkout, and [`CheckoutSuccessPage`](../src/pages/CheckoutSucce
 
 ## 1 — Cart
 
-The cart is `localStorage`-only (key `anita-cart`), managed by
+The cart is `localStorage`-only (key `acd-cart`), managed by
 [`CartContext`](../src/context/CartContext.tsx) — no login required to add
 items, no network round-trip to update a quantity. Each line is a
 `{ productId, size, quantity }` tuple; prices are looked up live from the
