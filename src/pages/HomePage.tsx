@@ -1,16 +1,15 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, ImageOff } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useProducts } from "../context/ProductsContext";
 import { journalPosts } from "../data/journal";
 import { ProductCard } from "../components/ProductCard";
 import { NewsletterSection } from "../components/NewsletterSection";
 import { Reveal } from "../components/Reveal";
 import { Image } from "../components/Image";
+import { HeroPandaWalk } from "../components/HeroPandaWalk";
 import { EASE, pageVariants } from "../lib/motionVariants";
-
-const heroImage = "/images/panda-blossom.jpg";
 
 const galleryImages = [
   { src: "/images/suede-jacket.jpg", caption: "Suede chore jacket — fitting" },
@@ -56,7 +55,6 @@ export function HomePage() {
   // published products so the homepage never has fewer than it can render.
   const signature = products.filter((p) => p.badge === "SIGNATURE").slice(0, 3);
   const featured = signature.length >= 3 ? signature : products.slice(0, 3);
-  const [heroFailed, setHeroFailed] = useState(false);
   const heroRef = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -67,27 +65,16 @@ export function HomePage() {
 
   return (
     <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants}>
-      {/* Hero — light ink illustration on a white canvas, so the artwork is
-          never cropped and the type sits in ink rather than white */}
-      <section ref={heroRef} className="relative h-svh overflow-hidden bg-white">
-        {heroFailed ? (
-          <div className="absolute inset-x-0 top-0 flex h-[58%] items-center justify-center sm:h-[62%] lg:h-[66%]">
-            <ImageOff size={24} strokeWidth={1.25} className="text-muted/60" aria-hidden="true" />
-            <span className="sr-only">
-              Ink illustration of a panda sleeping on a blossoming plum branch
-            </span>
-          </div>
-        ) : (
-          <motion.img
-            src={heroImage}
-            alt="Ink illustration of a panda sleeping on a blossoming plum branch"
-            style={{ y: imageY, scale: imageScale }}
-            onError={() => setHeroFailed(true)}
-            className="absolute inset-x-0 top-0 h-[58%] w-full object-contain object-right-top px-6 pt-20 sm:h-[62%] md:px-12 lg:h-[66%] lg:pt-28"
-          />
-        )}
+      {/* Hero — looping panda animation over a dark Myeongdong street scene */}
+      <section ref={heroRef} className="relative flex h-svh flex-col overflow-hidden bg-white">
+        <motion.div
+          style={{ y: imageY, scale: imageScale }}
+          className="relative h-[42%] w-full shrink-0 sm:h-[46%] lg:h-[50%]"
+        >
+          <HeroPandaWalk />
+        </motion.div>
 
-        <div className="relative mx-auto flex h-full max-w-[1400px] flex-col justify-end px-6 pb-14 text-ink sm:pb-20 md:px-12 lg:pb-28">
+        <div className="relative mx-auto flex w-full max-w-[1400px] flex-1 flex-col justify-end px-6 pb-14 text-ink sm:pb-20 md:px-12 lg:pb-28">
           <motion.p
             className="label"
             initial={{ opacity: 0, y: 20 }}

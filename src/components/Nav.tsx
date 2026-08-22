@@ -129,17 +129,18 @@ export function Nav() {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  // Over the home hero the bar is transparent (the hero artwork is light,
-  // so text stays ink); everywhere else it sits on the paper background.
+  // Over the home hero the bar is transparent — the hero is now a dark
+  // night scene, so text goes light (bg-toned) there instead of ink;
+  // everywhere else it sits on the paper background with ink text.
   const overHero = location.pathname === "/" && !scrolled;
 
   return (
     <>
       <header
-        className={`fixed inset-x-0 top-0 z-40 text-ink transition-colors duration-500 ${
+        className={`fixed inset-x-0 top-0 z-40 transition-colors duration-500 ${
           overHero
-            ? "border-b border-transparent bg-transparent"
-            : "border-b border-line bg-bg"
+            ? "border-b border-transparent bg-transparent text-bg"
+            : "border-b border-line bg-bg text-ink"
         }`}
       >
         <div className="mx-auto grid h-16 max-w-[1400px] grid-cols-[1fr_auto_1fr] items-center px-6 lg:h-20 lg:px-12">
