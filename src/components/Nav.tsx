@@ -129,9 +129,8 @@ export function Nav() {
     setMenuOpen(false);
   }, [location.pathname]);
 
-  // Over the home hero the bar is transparent — the hero is now a dark
-  // night scene, so text goes light (bg-toned) there instead of ink;
-  // everywhere else it sits on the paper background with ink text.
+  // Over the home hero the bar is transparent — the hero is a pale pastel
+  // scene, so ink text stays legible there same as everywhere else.
   const overHero = location.pathname === "/" && !scrolled;
 
   return (
@@ -139,7 +138,7 @@ export function Nav() {
       <header
         className={`fixed inset-x-0 top-0 z-40 transition-colors duration-500 ${
           overHero
-            ? "border-b border-transparent bg-transparent text-bg"
+            ? "border-b border-transparent bg-transparent text-ink"
             : "border-b border-line bg-bg text-ink"
         }`}
       >

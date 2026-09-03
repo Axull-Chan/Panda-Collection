@@ -8,7 +8,7 @@ import { ProductCard } from "../components/ProductCard";
 import { NewsletterSection } from "../components/NewsletterSection";
 import { Reveal } from "../components/Reveal";
 import { Image } from "../components/Image";
-import { HeroPandaWalk } from "../components/HeroPandaWalk";
+import { HeroPandaScene } from "../components/HeroPandaScene";
 import { EASE, pageVariants } from "../lib/motionVariants";
 
 const galleryImages = [
@@ -65,13 +65,17 @@ export function HomePage() {
 
   return (
     <motion.div initial="initial" animate="animate" exit="exit" variants={pageVariants}>
-      {/* Hero — looping panda animation over a dark Myeongdong street scene */}
-      <section ref={heroRef} className="relative flex h-svh flex-col overflow-hidden bg-white">
+      {/* Hero — looping sleepy panda video */}
+      <section ref={heroRef} className="relative flex h-svh flex-col overflow-hidden bg-bg">
         <motion.div
           style={{ y: imageY, scale: imageScale }}
           className="relative h-[42%] w-full shrink-0 sm:h-[46%] lg:h-[50%]"
         >
-          <HeroPandaWalk />
+          <HeroPandaScene />
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-16 sm:h-24 lg:h-32"
+            style={{ background: "linear-gradient(to bottom, transparent, var(--color-bg))" }}
+          />
         </motion.div>
 
         <div className="relative mx-auto flex w-full max-w-[1400px] flex-1 flex-col justify-end px-6 pb-14 text-ink sm:pb-20 md:px-12 lg:pb-28">
