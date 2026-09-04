@@ -1,6 +1,6 @@
 <div align="center">
 
-# ANITA — Engineering Case Study
+# ACD Fashion — Engineering Case Study
 
 *A production-verified, full-stack e-commerce platform, built and shipped solo.*
 
@@ -14,9 +14,10 @@
 
 Most portfolio e-commerce projects stop at "products in a grid with a cart
 that adds items to `localStorage`." That's a frontend exercise, not a
-demonstration of how software actually gets built and operated. ANITA was
-built to go further: a real backend, a real payment processor (in test
-mode), server-side pricing that can't be tampered with from the browser,
+demonstration of how software actually gets built and operated. This
+project was built to go further: a real backend, real payment processors
+(Stripe and Midtrans, both in test/sandbox mode), server-side pricing that
+can't be tampered with from the browser,
 inventory that behaves correctly under concurrent access and duplicate
 webhook delivery, and a test suite that proves all of it against the live
 deployment rather than a mocked stand-in.

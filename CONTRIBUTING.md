@@ -1,7 +1,8 @@
 # Contributing
 
-Thanks for considering contributing to ANITA. This started as a solo
-portfolio project, but issues, suggestions, and pull requests are welcome.
+Thanks for considering contributing to this project. It started as a solo
+portfolio build and is now live software for a real business, but issues,
+suggestions, and pull requests are welcome.
 
 ## Before you start
 

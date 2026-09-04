@@ -1,6 +1,6 @@
 <div align="center">
 
-# ANITA — Numbered Editions
+# ACD Fashion — Full-Stack E-Commerce Platform
 
 **A full-stack luxury e-commerce platform** — editorial storefront, real payments, coupons, inventory, and an admin back office, built solo and shipped to production.
 
@@ -20,7 +20,7 @@
 
 ## Overview
 
-ANITA is a fictional luxury clothing atelier that releases garments in numbered editions of twenty — a portfolio project built to demonstrate production-grade full-stack engineering, not a toy demo. Every feature a real storefront needs is implemented against a real backend: authentication, a synced wishlist and cart, real Stripe Checkout payments (test mode), a server-validated coupon engine, inventory that actually decrements on purchase, and a complete admin dashboard for managing all of it.
+This started as a portfolio project built to demonstrate production-grade full-stack engineering, not a toy demo — and is now real, live software for ACD Fashion, a small Indonesia-based clothing reseller. Every feature a real storefront needs is implemented against a real backend: authentication, a synced wishlist and cart, real Stripe and Midtrans checkout (both in test/sandbox mode pending the client's go-live), a server-validated coupon engine, inventory that actually decrements on purchase, and a complete admin dashboard for managing all of it.
 
 It's deployed and live at **[panda-collection.vercel.app](https://panda-collection.vercel.app)**, backed by a real Supabase project, verified end-to-end with a 157-test Playwright suite that runs against the live deployment — not mocks.
 

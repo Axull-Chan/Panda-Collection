@@ -48,7 +48,7 @@ Key insight: the entire luxury feel comes from **two extremes only** — huge qu
 
 ---
 
-## 2. Our elevated system (original identity: **ANITA**)
+## 2. Our elevated system (original identity: **ANITA**, later renamed to **ACD Fashion**)
 
 Positioning: garments in numbered editions — half boutique, half gallery. We keep
 the reference's *restraint* but move from its cool Shopify-white toward a warmer,

@@ -2,8 +2,8 @@
 
 ## Overview
 
-ANITA is a single-page React application backed entirely by Supabase, with
-Stripe layered in for payments. There is no custom backend server — every
+This is a single-page React application backed entirely by Supabase, with
+Stripe and Midtrans layered in for payments. There is no custom backend server — every
 piece of server-side logic that needs to be trusted (pricing, coupon
 validation, stock checks, payment confirmation) runs in a Supabase Edge
 Function, and everything else is a direct, RLS-protected query from the
@@ -11,18 +11,19 @@ browser to Postgres.
 
 ```
 ┌─────────────────┐        ┌──────────────────────┐        ┌─────────────────┐
-│   React SPA      │───────▶│  Supabase             │        │  Stripe          │
-│   (Vercel)       │        │  Postgres + Auth       │        │  Checkout        │
-│                   │◀───────│  + Storage + RLS       │        │  (hosted, test   │
-│                   │        │                        │        │   mode)          │
+│   React SPA      │───────▶│  Supabase             │        │  Stripe /        │
+│   (Vercel)       │        │  Postgres + Auth       │        │  Midtrans        │
+│                   │◀───────│  + Storage + RLS       │        │  (hosted, both   │
+│                   │        │                        │        │   sandbox mode)  │
 └─────────┬─────────┘        └──────────┬─────────────┘        └────────┬─────────┘
           │                             │                              │
           │  supabase.functions.invoke()│                              │
           ▼                             ▼                              │
 ┌───────────────────────────────────────────────────┐                  │
 │  Supabase Edge Functions (Deno)                     │                  │
-│  create-checkout-session · validate-coupon           │◀─────────────────┘
-│  stripe-webhook · subscribe-newsletter               │   payment
+│  create-checkout-session · create-midtrans-transaction│                  │
+│  validate-coupon · subscribe-newsletter               │◀─────────────────┘
+│  stripe-webhook · midtrans-notification               │   payment
 └───────────────────────────────────────────────────┘   confirmation
 ```
 
@@ -49,11 +50,12 @@ Payment confirmation is a webhook, signature-verified, and is the *only*
 code path that can flip an order to `paid` — not the success-page redirect,
 which is spoofable by anyone who guesses the URL.
 
-**Client-side fallback catalog.** `src/data/products.ts` is a bundled
-snapshot of the catalog. `ProductsContext` renders it immediately on first
-paint, then swaps to live Supabase data the moment it arrives — so the
-storefront never shows a loading spinner on first load, and still works
-(read-only, slightly stale) if the database is briefly unreachable.
+**No bundled fallback catalog.** `ProductsContext` starts empty and swaps
+to the live Supabase catalog the moment it arrives — deliberately no
+placeholder data baked into the bundle. An earlier version shipped with a
+bundled mock catalog for instant first paint, but that meant real visitors
+briefly saw fake products and prices on every page load; honest emptiness
+during that brief load is preferable to a plausible-looking lie.
 
 ## Request flow: a purchase, end to end
 
