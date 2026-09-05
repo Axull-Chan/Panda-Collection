@@ -1,9 +1,9 @@
-# ANITA — Database Design
+# ACD Fashion — Database Design
 
-Production-ready PostgreSQL schema for the ANITA e-commerce site, built for
-Supabase. Designed from an analysis of the actual frontend: product URLs use
-slugs, the UI needs a category, sizes, one primary image, a badge, an edition
-number, and a release index for sorting — all preserved here.
+Production-ready PostgreSQL schema for the ACD Fashion e-commerce site, built
+for Supabase. Designed from an analysis of the actual frontend: product URLs
+use slugs, the UI needs a category, sizes, one primary image, a badge, an
+edition number, and a release index for sorting — all preserved here.
 
 > For the conceptual schema overview, ERD, and security model in the context
 > of the full current application, see [`docs/database.md`](../docs/database.md)
